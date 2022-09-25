@@ -65,7 +65,7 @@ LIB_DEPEND="
 					>=dev-libs/openssl-1.0.1:0[bindist=]
 					<dev-libs/openssl-1.1.0:0[bindist=]
 				)
-				>=dev-libs/openssl-1.1.0g:0[bindist=]
+				>=dev-libs/openssl-1.1.0g:0
 			)
 			dev-libs/openssl:0=[static-libs(+)]
 		)

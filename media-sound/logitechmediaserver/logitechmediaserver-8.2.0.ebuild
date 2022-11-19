@@ -1,546 +1,429 @@
-# Copyright 1999-2009 Gentoo Foundation
+# Copyright 2020 gordonb3 <gordon@bosvangennip.nl>
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/media-sound/squeezeboxserver/squeezeboxserver-7.4.1.ebuild,v 1.1 2009/11/25 22:52:26 lavajoe Exp $
+#
+# $Header$
 
-EAPI=5
-inherit eutils user
+EAPI="7"
 
-MAJOR_VER="${PV:0:3}"
-MINOR_VER="${PV:4:1}"
-BUILD_NUM="1627922070"
-MY_P="logitechmediaserver-${MAJOR_VER}.${MINOR_VER}-noCPAN"
-MY_P_BUILD_NUM="logitechmediaserver-${MAJOR_VER}.${MINOR_VER}-${BUILD_NUM}-noCPAN"
+inherit user systemd
 
-DESCRIPTION="Logitech Media server"
-HOMEPAGE="http://www.logitechsqueezebox.com/support/download-squeezebox-server.html"
-LICENSE="GPL-2"
+
+MY_PN="${PN/-bin}"
+MY_PV="${PV/_*}"
+MY_PF="${MY_PN}-${MY_PV}"
+S="${WORKDIR}/${MY_PF}-noCPAN"
+
+SRC_DIR="LogitechMediaServer_v${MY_PV}"
+SRC_URI="http://downloads.slimdevices.com/${SRC_DIR}/${MY_PF}-noCPAN.tgz"
+HOMEPAGE="http://www.mysqueezebox.com/"
+
+KEYWORDS="amd64"
+DESCRIPTION="Logitech Media Server (streaming audio server)"
+LICENSE="${MY_PN}"
+RESTRICT="bindist mirror"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
-IUSE="lame wavpack musepack alac ogg flac avahi aac bonjour"
-SRC_URI="http://downloads.slimdevices.com/LogitechMediaServer_v8.2.0/logitechmediaserver-8.2.0-noCPAN.tgz"
+IUSE="systemd mp3 alac wavpack flac ogg aac mac freetype dlna"
 
-RUN_UID=logitechmediaserver
-RUN_GID=logitechmediaserver
+EXTRALANGS="he"
+for LANG in ${EXTRALANGS}; do
+	IUSE="$IUSE l10n_${LANG}"
+done
 
-# Note: common-sense currently required due to bundled EV (Gentoo bug#287257)
+# Installation dependencies.
 DEPEND="
+	acct-user/${MY_PN}
+	acct-group/${MY_PN}
 	!media-sound/squeezecenter
 	!media-sound/squeezeboxserver
-	!media-sound/logitechmediaserver-bin
-	virtual/logger
-	virtual/mysql
-	avahi? ( net-dns/avahi )
-	>=dev-perl/common-sense-2.01
-	"
-# Note: dev-perl/GD necessary because of SC bug#6143
-# (http://bugs.slimdevices.com/show_bug.cgi?id=6143).
+	!media-sound/${MY_PN}-bin
+	app-arch/unzip
+	dev-lang/nasm
+"
+
+# Runtime dependencies.
 RDEPEND="
-	dev-perl/File-Which
 	virtual/logger
-	virtual/mysql
-	avahi? ( net-dns/avahi )
-	>=dev-lang/perl-5.8.8
-	>=dev-perl/AnyEvent-7.170.0
-	>=dev-perl/Archive-Zip-1.680.0
-	>=dev-perl/AutoXS-Header-1.20.0-r2
-	>=dev-perl/Cache-Cache-1.80.0
-	>=dev-perl/Carp-Assert-0.210.0-r1
-	>=dev-perl/Carp-Clan-6.80.0
-	>=dev-perl/CGI-4.470.0
-	>=dev-perl/Class-C3-0.340.0
-	>=dev-perl/Class-C3-XS-0.150.0-r1
-	>=dev-perl/Class-Data-Inheritable-0.80.0-r3
-	>=dev-perl/Class-Inspector-1.360.0
-	>=dev-perl/Class-Virtual-0.80.0
-	>=dev-perl/Class-XSAccessor-1.190.0-r1
-	>=dev-perl/Data-Dump-1.230.0
-	>=dev-perl/Data-Page-2.20.0-r1
-	>=dev-perl/DBD-mysql-4.50.0
-	>=dev-perl/DBD-SQLite-1.660.0
-	>=dev-perl/DBI-1.643.0
-	>=dev-perl/Digest-SHA1-2.130.0-r1
-	>=dev-perl/Encode-Detect-1.10.0-r1
-	>=dev-perl/EV-4.220.0
-	>=dev-perl/Exporter-Lite-0.80.0
-	>=dev-perl/File-Next-1.160.0
-	>=dev-perl/File-ReadBackwards-1.50.0-r1
-	>=dev-perl/File-Slurp-9999.270.0
-	>=dev-perl/File-Which-1.220.0
-	>=dev-perl/HTML-Parser-3.720.0
-	>=dev-perl/HTTP-Daemon-6.120.0
-	>=dev-perl/IO-Socket-SSL-2.66.0
-	>=dev-perl/IO-String-1.80.0-r1
-	>=dev-perl/JSON-XS-3.40.0
-	>=dev-perl/libwww-perl-6.270.0
-	>=dev-perl/Log-Log4perl-1.490.0
-	>=dev-perl/Math-VecStat-0.80.0-r1
-	>=dev-perl/Module-Find-0.130.0
-	>=dev-perl/Network-IPv4Addr-0.05
-	>=dev-perl/Net-DNS-1.130.0
-	>=dev-perl/Net-IP-1.260.0-r1
-	>=dev-perl/PAR-1.15.0
-	>=dev-perl/Path-Class-0.370.0
-	>=dev-perl/Readonly-2.50.0
-	>=dev-perl/Scope-Guard-0.210.0
-	>=dev-perl/SOAP-Lite-1.260.0
-	<=dev-perl/SQL-Abstract-1.840.0
-	>=dev-perl/Sub-Name-0.210.0
-	>=dev-perl/Template-Toolkit-2.270.0-r1
-	>=dev-perl/Text-Unidecode-1.300.0
-	>=dev-perl/Tie-IxHash-1.230.0
-	>=dev-perl/Tie-RegexpHash-0.17
-	>=dev-perl/TimeDate-2.300.0
-	>=dev-perl/URI-1.730.0
-	>=dev-perl/YAML-Syck-1.310.0
-	>=dev-perl/YAML-LibYAML-0.690.0
-	>=dev-perl/XML-Parser-2.440.0
-	>=dev-perl/XML-Simple-2.250.0
-	>=virtual/perl-File-Temp-0.230.900
-	>=virtual/perl-IO-Compress-2.84.0
-	>=virtual/perl-Time-HiRes-1.976.0
-	>=virtual/perl-version-0.992.400-r1
-	>=dev-perl/Async-Util-0.01
-	>=dev-perl/Audio-Scan-1.10.0-r1
-	>=dev-perl/Class-C3-Componentised-1.1.2
-	>=dev-perl/Data-URIEncode-0.110.0-r2
-	>=dev-perl/enum-1.110.0
-	>=dev-perl/File-BOM-0.180.0
-	>=dev-perl/GD-2.660
-	>=dev-perl/Image-Scale-0.130.0
-	>=dev-perl/Net-HTTPS-NB-0.15
-	>=dev-perl/Proc-Background-1.100.0-r1
-	>=dev-perl/SQL-Abstract-Limit-0.141.0-r1
-	>=dev-perl/Tie-Cache-LRU-20150301.0.0
-        >=dev-perl/Tie-Cache-LRU-Expires-0.550.0-r1
-	>=dev-perl/URI-Find-20160806.0.0
-	>=dev-perl/UUID-Tiny-1.40.0
-	>=dev-perl/JSON-XS-VersionOneAndTwo-0.310.0
-	lame? ( media-sound/lame )
-	alac? ( media-sound/alac_decoder )
+	dev-db/sqlite
+	>=dev-lang/perl-5.8.8[ithreads]
+	>=dev-perl/Data-UUID-1.202
+	>=dev-perl/Audio-Scan-1.20.0
+	>=dev-perl/Class-XSAccessor-1.180.0
+	dev-perl/CGI
+	dev-perl/Class-C3-XS
+	dev-perl/DBD-SQLite
+	dev-perl/DBI
+	dev-perl/Digest-SHA1
+	dev-perl/Encode-Detect
+	dev-perl/EV
+	dev-perl/HTML-Parser
+	dev-perl/Image-Scale[gif,jpeg,png]
+	dev-perl/IO-AIO
+	dev-perl/IO-Interface
+	dev-perl/JSON-XS
+	dev-perl/Linux-Inotify2
+	dev-perl/Sub-Name
+	dev-perl/Template-Toolkit[gd]
+	dev-perl/XML-Parser
+	dev-perl/YAML-LibYAML
+	dev-perl/MP3-Cut-Gapless
+	l10n_he? ( dev-perl/Locale-Hebrew )
+	mp3? ( media-sound/lame )
 	wavpack? ( media-sound/wavpack )
-	bonjour? ( net-misc/mDNSResponder )
 	flac? (
 		media-libs/flac
-		media-sound/sox[flac(+)]
-		)
-	ogg? ( media-sound/sox[ogg(+)] )
-	aac? ( media-libs/faad2 )
-	"
+		media-sound/sox[flac]
+	)
+	ogg? ( media-sound/sox[ogg] )
+	aac? ( media-libs/slim-faad )
+	alac? ( media-libs/slim-faad )
+	mac? ( media-sound/mac )
+	freetype? ( dev-perl/Font-FreeType )
+	dlna? ( dev-perl/Media-Scan )
+"
 
-S="${WORKDIR}/${MY_P}"
+RUN_UID=${MY_PN}
+RUN_GID=${MY_PN}
 
-CPANKEEP="
-	Class/
-	DBIx/
-	Media/
-	"
+# Installation target locations
+BINDIR="/opt/${MY_PN}"
+DATADIR="/var/lib/${MY_PN}"
+CACHEDIR="${DATADIR}/cache"
+USRPLUGINSDIR="${DATADIR}/Plugins"
+SVRPLUGINSDIR="${CACHEDIR}/InstalledPlugins"
+CLIENTPLAYLISTSDIR="${DATADIR}/ClientPlaylists"
+PREFSDIR="${DATADIR}/preferences"
+LOGDIR="/var/log/${MY_PN}"
+SVRPREFS="${PREFSDIR}/server.prefs"
 
-VARLIBSBS="/var/lib/logitechmediaserver"
-PREFSDIR="${VARLIBSBS}/prefs"
-PREFS="${PREFSDIR}/logitechmediaserver.prefs"
-LIVE_PREFS="${PREFSDIR}/server.prefs"
-DOCDIR="/usr/share/doc/logitechmediaserver-${PV}"
-SHAREDIR="/usr/share/logitechmediaserver"
-LIBDIR="/usr/lib/logitechmediaserver"
-OLDDBUSER="squeezecenter"
-DBUSER="squeezeboxserver"
-PLUGINSDIR="${VARLIBSBS}/Plugins"
-ETCDIR=/etc/logitechmediaserver
+# Old Squeezebox Server file locations
+SBS_PREFSDIR="/etc/squeezeboxserver/prefs"
+SBS_SVRPREFS="${SBS_PREFSDIR}/server.prefs"
+SBS_VARLIBDIR="/var/lib/squeezeboxserver"
+SBS_SVRPLUGINSDIR="${SBS_VARLIBDIR}/cache/InstalledPlugins"
+SBS_USRPLUGINSDIR="${SBS_VARLIBDIR}/Plugins"
 
-# To support Migration
-OLDETCDIR=/etc/squeezecenter
-OLDPREFSDIR=/var/lib/squeezecenter/prefs
-OLDPLUGINSDIR=/var/lib/squeezecenter/Plugins
-MIGMARKER=.migrated
+# Original preferences location from the Squeezebox overlay
+R1_PREFSDIR="/etc/${MY_PN}"
 
-pkg_setup() {
-	# Create the user and group if not already present
-	enewgroup ${RUN_GID}
-	enewuser ${RUN_UID} -1 -1 "/dev/null" ${RUN_GID}
-}
+PATCHES=(
+	"${FILESDIR}/LMS_replace_UUID-Tiny_with_Data-UUID.patch"
+	"${FILESDIR}/LMS-perl-recent.patch"
+	"${FILESDIR}/LMS-8.0.0_remove_softlink_target_check.patch"
+	"${FILESDIR}/LMS-8.2.0_move_client_playlist_path.patch"
+)
 
-src_unpack() {
-	unpack ${A}
-	cd "${S}"
-#
-#	# Apply patches
-#	epatch "${FILESDIR}/${P}-build-perl-modules-gentoo.patch"
+
+# Use of DynaLoader causes conflicts because it prefers the system
+# perl folders over the local CPAN folder. Following is a list of
+# folders and files that we always want to remove from the LMS
+# distributed CPAN modules because they are pulled in by our listed
+# dependencies.
+OBSOLETEDIRS=(
+	"Audio"
+	"Class/XSAccessor"
+	"DBD"
+	"DBI/Const"
+	"DBI/DBD"
+	"DBI/ProfileDumper"
+	"Encode/Detect"
+	"Image"
+	"IO/Interface"
+	"Locale"
+	"MP3"
+	"Sub"
+	"Template/Namespace"
+	"Template/Stash"
+	"UUID"
+	"XML/Parser"
+	"YAML/XS"
+	"arch"
+	"common"
+)
+
+OBSOLETEFILES=(
+	"Class/C3/XS.pm"
+	"Class/XSAccessor.pm"
+	"DBI/Profile.pm"
+	"DBI/ProfileData.pm"
+	"DBI/ProfileDumper.pm"
+	"DBI/ProfileSubs.pm"
+	"DBI/DBD.pm"
+	"Digest/SHA1.pm"
+	"JSON/XS/Boolean.pm"
+	"JSON/XS.pm"
+	"HTML/Entities.pm"
+	"HTML/Filter.pm"
+	"HTML/HeadParser.pm"
+	"HTML/LinkExtor.pm"
+	"HTML/Parser.pm"
+	"HTML/PullParser.pm"
+	"HTML/TokeParser.pm"
+	"IO/AIO.pm"
+	"IO/Interface.pm"
+	"Linux/Inotify2.pm"
+	"Template/Plugin/Assert.pm"
+	"Template/Plugin/CGI.pm"
+	"Template/Plugin/Datafile.pm"
+	"Template/Plugin/Date.pm"
+	"Template/Plugin/Directory.pm"
+	"Template/Plugin/Dumper.pm"
+	"Template/Plugin/File.pm"
+	"Template/Plugin/Filter.pm"
+	"Template/Plugin/Format.pm"
+	"Template/Plugin/HTML.pm"
+	"Template/Plugin/Image.pm"
+	"Template/Plugin/Iterator.pm"
+	"Template/Plugin/Math.pm"
+	"Template/Plugin/Pod.pm"
+	"Template/Plugin/Procedural.pm"
+	"Template/Plugin/String.pm"
+	"Template/Plugin/Scalar.pm"
+	"Template/Plugin/Table.pm"
+	"Template/Plugin/URL.pm"
+	"Template/Plugin/View.pm"
+	"Template/Plugin/Wrap.pm"
+	"Template/Base.pm"
+	"Template/Config.pm"
+	"Template/Constants.pm"
+	"Template/Context.pm"
+	"Template/Directive.pm"
+	"Template/Document.pm"
+	"Template/Exception.pm"
+	"Template/Filters.pm"
+	"Template/Grammar.pm"
+	"Template/Iterator.pm"
+	"Template/Parser.pm"
+	"Template/Plugin.pm"
+	"Template/Plugins.pm"
+	"Template/Service.pm"
+	"Template/Stash.pm"
+	"Template/Test.pm"
+	"Template/View.pm"
+	"Template/VMethods.pm"
+	"XML/Parser.pm"
+	"YAML/Dumper/Syck.pm"
+	"YAML/Loader/Syck.pm"
+	"YAML/XS.pm"
+	"DBI.pm"
+	"EV.pm"
+	"Template.pm"
+)
+
+src_prepare() {
+	default	
+
+	# fix default user name to run as
+	sed -e "s/squeezeboxserver/${RUN_UID}/" -i slimserver.pl
+
+	# merge the secondary lib folder into CPAN, keeping track of the various locations
+	# for CPAN modules is hard enough already without it.
+	elog "Merging lib and CPAN folders together"
+	cp -aR lib/* CPAN/
+	rm -rf lib
+	sed -e "/catdir(\$libPath,'lib'),/d" -i Slim/bootstrap.pm
+
+	# Delete files that our dependencies have placed in the system's Perl vendor path
+	elog "Remove CPAN modules that conflict with arch specific modules in the system vendor path"
+	for DIR in ${OBSOLETEDIRS[@]} ; do
+		rm -rf CPAN/${DIR}
+	done
+	for FILE in ${OBSOLETEFILES[@]} ; do
+		rm -f CPAN/${FILE}
+	done
+
+	# The custom OS module for Gentoo - provides OS-specific path details
+	elog "Import custom paths to match Gentoo specifications"
+	cp "${FILESDIR}/gentoo-filepaths.pm" "Slim/Utils/OS/Custom.pm" || die "Unable to install Gentoo custom OS module"
+	fperms 644 "Slim/Utils/OS/Custom.pm"
 }
 
 src_install() {
-
-# The main Perl executables
-	exeinto /usr/sbin
-	newexe slimserver.pl logitechmediaserver
-	newexe scanner.pl logitechmediaserver-scanner
-	newexe cleanup.pl logitechmediaserver-cleanup
-
-	# Get the path to the Perl vendor_perl directory
-	eval `perl '-V:vendorlib'`
-
-	# The custom OS module for Gentoo - provides OS-specific path details
-	cp "${FILESDIR}/gentoo-filepaths.pm" "Slim/Utils/OS/Custom.pm" || die "Unable to install Gentoo custom OS module"
-
-        elog "Kopiere die Perl Module des Logitech Media Servers"
-        elog "in das Verzeichnis ${vendorlib}"
-        elog ""
-	# The server Perl modules
-	dodir "${vendorlib}"
-	cp -r Slim "${D}${vendorlib}" || die "Unable to install server Perl modules"
-
-	# Compiled CPAN module go under lib as they are arch-specific
-#	dodir "/usr/lib/logitechmediaserver/CPAN"
-#	cp -r CPAN/arch "${D}/usr/lib/squeezeboxserver/CPAN" || die "Unable to install compiled CPAN modules"
-
-
-	# Preseve some of the Squeezebox Server-packaged CPAN modules that Gentoo
-	# doesn't provide ebuilds for.
-	for ITEM in ${CPANKEEP}; do
-		dodir "/usr/share/logitechmediaserver/CPAN/$(dirname ${ITEM})"
-		cp -r "CPAN/${ITEM}" "${D}/usr/share/logitechmediaserver/CPAN/${ITEM}" || die "Unable to preserve CPAN item ${ITEM}"
-	done
-
-	# Various directories of architecture-independent static files
-	dodir "${SHAREDIR}"
-	cp -r Firmware "${D}/${SHAREDIR}"	|| die "Unable to install firmware"
-	cp -r Graphics "${D}/${SHAREDIR}"	|| die "Unable to install Graphics"
-	cp -r HTML "${D}/${SHAREDIR}"		|| die "Unable to install HTML"
-	cp -r IR "${D}/${SHAREDIR}"			|| die "Unable to install IR"
-	cp -r SQL "${D}/${SHAREDIR}"		|| die "Unable to install SQL"
-
-	# Architecture-dependent static files
-	dodir "${LIBDIR}"
-	cp -r lib/* "${D}/${LIBDIR}" || die "Unable to install architecture-dependent files"
-
-	# Strings and version identification
-	insinto "${SHAREDIR}"
-	doins strings.txt
-	doins revision.txt
+	# Everything in our package into the /opt hierarchy
+	elog "Installing package files"
+	dodir "${BINDIR}"
+	cp -aR ${S}/* "${ED}/${BINDIR}" || die "Unable to install package files"
+	rm ${ED}/${BINDIR}/{Changelog*,License*,README.md,revision.txt,SOCKS.txt}
 
 	# Documentation
-	elog "Kopiere die Dokumentations Dateien in das Verzeichnis"
-	elog "/usr/share/doc/logitechmediaserver-${MAJOR_VER}.${MINOR_VER}/"
-	elog "unterhalb des Ordners"
-	elog "/var/tmp/portage/media-sound/logitechmediaserver-${MAJOR_VER}.${MINOR_VER}/image/"
-	elog ""
 	dodoc Changelog*.html
-	dodoc SOCKS.txt
 	dodoc License*.txt
-	newdoc "${FILESDIR}/Gentoo-plugins-README.txt" Gentoo-plugins-README.txt
+	dodoc "${FILESDIR}/Gentoo-plugins-README.txt"
 
-
-	# Configuration files
-        elog "Kopiere die Konfigurations Dateien in das Verzeichnis"
-        elog "/etc/logitechmediaserver innerhalb des Ordners"
-	elog "/var/tmp/portage/media-sound/logitechmediaserver-${MAJOR_VER}.${MINOR_VER}/image/"
-	elog ""
-	insinto /etc/logitechmediaserver
-	doins convert.conf
-	doins types.conf
-	doins modules.conf
-
-	# Install init scripts
-	newconfd "${FILESDIR}/logitechmediaserver.conf.d" logitechmediaserver
-	newinitd "${FILESDIR}/logitechmediaserver.init.d" logitechmediaserver
-
-	# Install preferences
-	elog "Installation der preferences Datei (logitechmediaserver.prefs)"
-	elog "aus dem Verzeichnis ${FILESDIR} in das Verzeichnis ${PREFSDIR}"
-	elog ""
-	insinto "${PREFSDIR}"
-	elog "Teste ob im Verzeichnis: ${PREFSDIR} bereits eine Datei"
-	elog "mit dem Dateinamen logitechmediaserver.prefs existiert"
-	elog ""
-	if [ ! -f "${PREFSDIR}/logitechmediaserver.prefs" ]; then
-		elog "Diese Datei existiert nicht daher fuege ich nun eine neue"
-		elog "logitechmediaserver.prefs Datei aus dem Verzeichnis: ${FILESDIR}"
-		elog "in das Verzeichnis /var/tmp/portage/media-sound/logitechmediaserver-${MAJOR_VER}.${MINOR_VER}/image/${PREFSDIR} ein"
-		newins "${FILESDIR}/logitechmediaserver.prefs" logitechmediaserver.prefs
+	# This may seem a weird construct, but it saves me from receiving QA messages on OpenRC systems
+	if use systemd ; then
+		# Install unit file (systemd)
+		cat "${FILESDIR}/${MY_PN}.service" | sed "s/^#Env/Env/" > "${S}/../${MY_PN}.service"
+		systemd_dounit "${S}/../${MY_PN}.service"
+	else
+		# Install init script (OpenRC)
+		newinitd "${FILESDIR}/${MY_PN}.init.d" "${MY_PN}"
 	fi
-	elog "Passe den File-Owner und die File-Permission der Preferences Datei an"
-	elog ""
-	fowners ${RUN_GID}:${RUN_UID} "${PREFSDIR}"
-	fperms 770 "${PREFSDIR}"
+	newconfd "${FILESDIR}/${MY_PN}.conf.d" "${MY_PN}"
 
-	# Initialize run directory (where the PID file lives)
-	elog "Erstelle einen neuen Ordner namens logitechmediaserver im verzeichnis"
-	elog "/var/tmp/portage/media-sound/logitechmediaserver-${MAJOR_VER}.${MINOR_VER}/image/var/run/logitechmediaserver"
-	elog ""
-	dodir /var/run/logitechmediaserver
-	fowners ${RUN_GID}:${RUN_UID} /var/run/logitechmediaserver
-	fperms 770 /var/run/logitechmediaserver
-
-	# Initialize server cache directory
-	elog "Erstelle einen neuen Ordner namens cache im Verzeichnis"
-	elog "/var/tmp/portage/media-sound/logitechmediaserver-${MAJOR_VER}.${MINOR_VER}/image/var/lib/logitechmediaserver/cache"
-	elog ""
-	dodir /var/lib/logitechmediaserver/cache
-	fowners ${RUN_GID}:${RUN_UID} /var/lib/logitechmediaserver/cache
-	fperms 770 /var/lib/logitechmediaserver/cache
-
-	# Initialize the log directory
-	elog "Erstelle einen neuen Ordner mit dem Namen logitechmediaserver im Verzeichnis"
-	elog "/var/tmp/portage/media-sound/logitechmediaserver-${MAJOR_VER}.${MINOR_VER}/image/var/log/logitechmediaserver"
-	elog ""
-	dodir /var/log/logitechmediaserver
-	fowners ${RUN_GID}:${RUN_UID} /var/log/logitechmediaserver
-	fperms 770 /var/log/logitechmediaserver
-	touch "${D}/var/log/logitechmediaserver/server.log"
-	touch "${D}/var/log/logitechmediaserver/scanner.log"
-	touch "${D}/var/log/logitechmediaserver/perfmon.log"
-	fowners ${RUN_GID}:${RUN_UID} /var/log/logitechmediaserver/server.log
-	fowners ${RUN_GID}:${RUN_UID} /var/log/logitechmediaserver/scanner.log
-	fowners ${RUN_GID}:${RUN_UID} /var/log/logitechmediaserver/perfmon.log
-
-	# Initialise the user-installed plugins directory
-	elog "Erstelle einen neuen Ordner mit dem Namen ${PLUGINSDIR}"
-	elog "Im Verzeichnis: /var/tmp/portage/media-sound/logitechmediaserver-${MAJOR_VER}.${MINOR_VER}/image/"
-	elog ""
-	dodir "${PLUGINSDIR}"
-	fowners ${RUN_GID}:${RUN_UID} "${PLUGINSDIR}"
-	fperms 770 "${PLUGINSDIR}"
+	# prepare data and log file locations
+	elog "Set up log and data file locations"
+	for TARGETDIR in ${LOGDIR} ${DATADIR} ${PREFSDIR} ${CACHEDIR} ${USRPLUGINSDIR} ${CLIENTPLAYLISTSDIR}; do
+		keepdir ${TARGETDIR}
+		fowners ${RUN_UID}:${RUN_GID} "${TARGETDIR}"
+		fperms 770 "${TARGETDIR}"
+	done
+	for LOGFILE in server scanner perfmon; do
+		touch "${ED}/${LOGDIR}/${LOGFILE}.log"
+		fowners ${RUN_UID}:${RUN_GID} "${LOGDIR}/${LOGFILE}.log"
+	done
 
 	# Install logrotate support
 	insinto /etc/logrotate.d
-	newins "${FILESDIR}/logitechmediaserver.logrotate.d" logitechmediaserver
-
-	# Install Avahi support (if USE flag is set)
-	if use avahi; then
-		insinto /etc/avahi/services
-		newins "${FILESDIR}/avahi-logitechmediaserver.service" logitechmediaserver.service
-	fi
-
-	# Entferne nicht benoetigte Ordner die installiert werden
-	# aber im Konflikt mit den bereits im System installierten stehen
-	elog "Remove the Audio Folder from the installation directory"
-	elog "Folder: ${D::-1}${LIBDIR}/Audio"
-	elog ""
-	rm -r ${D::-1}${LIBDIR}/Audio
-	elog "Remove the Log4perl Folder from the installation directory"
-	elog "Folder: ${D::-1}${LIBDIR}/Log/Log4perl"
-	elog ""
-	rm -r ${D::-1}${LIBDIR}/Log/Log4perl
+	newins "${FILESDIR}/${MY_PN}.logrotate.d" "${MY_PN}"
 }
 
-sc_starting_instr() {
+lms_starting_instr() {
 	elog "Logitech Media Server can be started with the following command:"
-	elog "\t/etc/init.d/logitechmediaserver start"
+	if use systemd ; then
+		elog "\tsystemctl start ${MY_PN}"
+	else
+		elog "\t/etc/init.d/${MY_PN} start"
+	fi
 	elog ""
-	elog "Logitech Media Server can be automatically started on each boot with the"
-	elog "following command:"
-	elog "\trc-update add logitechmediaserver default"
+	elog "Logitech Media Server can be automatically started on each boot"
+	elog "with the following command:"
+	if use systemd ; then
+		elog "\tsystemctl enable ${MY_PN}"
+	else
+		elog "\trc-update add ${MY_PN} default"
+	fi
 	elog ""
 	elog "You might want to examine and modify the following configuration"
 	elog "file before starting Logitech Media Server:"
-	elog "\t/etc/conf.d/logitechmediaserver"
+	elog "\t/etc/conf.d/${MY_PN}"
 	elog ""
 
 	# Discover the port number from the preferences, but if it isn't there
 	# then report the standard one.
-	httpport=$(gawk '$1 == "httpport:" { print $2 }' "${ROOT}${LIVE_PREFS}" 2>/dev/null)
-	elog "You may access and configure Squeezebox Server by browsing to:"
+	httpport=$(gawk '$1 == "httpport:" { print $2 }' "${ROOT}${SVRPREFS}" 2>/dev/null)
+	elog "You may access and configure Logitech Media Server by browsing to:"
 	elog "\thttp://localhost:${httpport:-9000}/"
+	elog ""
 }
 
 pkg_postinst() {
-	# FLAC and LAME are quite useful (but not essential) for Squeezebox Server -
-	# if they're not enabled then make sure the user understands that.
-	if ! use flac; then
-		ewarn "'flac' USE flag is not set.  Although not essential, FLAC is required"
-		ewarn "for playing lossless WAV and FLAC (for Squeezebox 1), and for"
-		ewarn "playing other less common file types (if you have a Squeezebox 2 or newer)."
-		ewarn "For maximum flexibility you are recommended to set the 'flac' USE flag".
-		ewarn ""
-	fi
-	if ! use lame; then
-		ewarn "'lame' USE flag is not set.  Although not essential, LAME is"
-		ewarn "required if you want to limit the bandwidth your Squeezebox or"
-		ewarn "Transporter uses when streaming audio."
-		ewarn "For maximum flexibility you are recommended to set the 'lame' USE flag".
-		ewarn ""
-	fi
 
-	# Album art requires PNG and JPEG support from GD, so if it's not there
-	# then warn the user.  It's not mandatory as the user may not be using
-	# album art.
-	if ! built_with_use dev-perl/GD jpeg || \
-	   ! built_with_use dev-perl/GD png || \
-	   ! built_with_use media-libs/gd jpeg || \
-	   ! built_with_use media-libs/gd png; then
-		ewarn "For correct operation of album art through Squeezebox Server's web"
-		ewarn "interface the GD library and Perl module must be built with PNG"
-		ewarn "and JPEG support.  If necessary you can add the following lines"
-		ewarn "to the file /etc/portage/package.use:"
-		ewarn "\tdev-perl/GD jpeg png"
-		ewarn "\tmedia-libs/gd jpeg png"
-		ewarn "And then rebuild those packages with:"
-		ewarn "\temerge --newuse dev-perl/GD media-libs/gd"
-		ewarn ""
-	fi
-
-	# Point user to database configuration step
-	elog "If this is a new installation of Logitech Media Server then the database"
-	elog "must be configured prior to use.  This can be done by running the"
-	elog "following command:"
-	elog "\temerge --config =${CATEGORY}/${PF}"
-	elog "This command will also migrate old Logitech Media Server preferences and"
-	elog "plugins (if present)."
-
-	# Remind user to configure Avahi if necessary
-	if use avahi; then
+	# Point user to database configuration step, if an old installation
+	# of SBS is found.
+	if [ -f "${SBS_SVRPREFS}" ]; then
+		elog "If this is a new installation of Logitech Media Server and you"
+		elog "previously used Squeezebox Server (media-sound/squeezeboxserver)"
+		elog "then you may migrate your previous preferences and plugins by"
+		elog "running the following command (note that this will overwrite any"
+		elog "current preferences and plugins):"
+		elog "\temerge --config =${CATEGORY}/${PF}"
 		elog ""
-		elog "Avahi support installed.  Remember to edit the folowing file if"
-		elog "you run Logitech Media Server's web interface on a port other than 9000:"
-		elog "\t/etc/avahi/services/logitechmediaserver.service"
 	fi
 
+	# Tell user where they should put any manually-installed plugins.
+	elog "Manually installed plugins should be placed in the following"
+	elog "directory:"
+	elog "\t${USRPLUGINSDIR}"
 	elog ""
-	sc_starting_instr
+
+	# Bug: LMS should not write to /etc
+	# Move existing preferences from /etc to /var/lib
+	if [ ! -f "${PREFSDIR}/server.prefs" ]; then
+		if [ -d "${R1_PREFSDIR}" ]; then
+			cp -r "${R1_PREFSDIR}"/* "${PREFSDIR}" || die "Failed to copy preferences"
+			rm -r "${R1_PREFSDIR}"
+			chown -R ${RUN_UID}.${RUN_GID} "${PREFSDIR}"
+		fi
+	fi
+
+	# Show some instructions on starting and accessing the server.
+	lms_starting_instr
 }
 
-sc_remove_db_prefs() {
+lms_remove_db_prefs() {
 	MY_PREFS=$1
 
-	einfo "Configuring Logitech Media Server database preferences (${MY_PREFS}) ..."
-	TMPPREFS="${T}"/logitechmediaserver-prefs-$$
-	touch "${ROOT}${MY_PREFS}"
-	sed -e '/^dbusername:/d' -e '/^dbpassword:/d' -e '/^dbsource:/d' < "${ROOT}${MY_PREFS}" > "${TMPPREFS}"
-	mv "${TMPPREFS}" "${ROOT}${MY_PREFS}"
-	chown ${RUN_GID}:${RUN_UID} "${ROOT}${MY_PREFS}"
-	chmod 660 "${ROOT}${MY_PREFS}"
+	einfo "Correcting database connection configuration:"
+	einfo "\t${MY_PREFS}"
+	TMPPREFS="${T}"/lmsserver-prefs-$$
+	touch "${EROOT}${MY_PREFS}"
+	sed -e '/^dbusername:/d' -e '/^dbpassword:/d' -e '/^dbsource:/d' < "${EROOT}${MY_PREFS}" > "${TMPPREFS}"
+	mv "${TMPPREFS}" "${EROOT}${MY_PREFS}"
+	chown ${RUN_UID}:${RUN_GID} "${EROOT}${MY_PREFS}"
+	chmod 660 "${EROOT}${MY_PREFS}"
 }
 
-sc_update_prefs() {
-	MY_PREFS=$1
-	MY_DBUSER=$2
-	MY_DBUSER_PASSWD=$3
+lms_clean_oldfiles() {
+	einfo "locating "
+	MY_PERL_VENDORPATH=$(LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" perl -V | grep vendorarch | sed "s/^.*vendorarch=//" | sed "s/ .*$//g")
+	cd ${MY_PERL_VENDORPATH}
+	find -type f | sed "s/^\.\///" | grep -v "/DBIx/" | while read file; do 
+		if [ -f ${EROOT}${BINDIR}/CPAN/${file} ]; then
+			rm -v ${EROOT}${BINDIR}/CPAN/${file}
+		fi
+	done
+	cd - &>/dev/null
 
-	echo "dbusername: ${MY_DBUSER}" >> "${ROOT}${MY_PREFS}"
-	echo "dbpassword: ${MY_DBUSER_PASSWD}" >> "${ROOT}${MY_PREFS}"
-	echo "dbsource: dbi:mysql:database=${MY_DBUSER};mysql_socket=/var/run/mysqld/mysqld.sock" >> "${ROOT}${MY_PREFS}"
+	# delete empty directories in LMS path
+	cd ${EROOT}${BINDIR}
+	MY_SEARCHDEPTH=5
+	while [  ${MY_SEARCHDEPTH} -gt 0 ]; do
+		find -mindepth ${MY_SEARCHDEPTH} -maxdepth ${MY_SEARCHDEPTH} -type d -empty -exec rmdir -v {} \;
+		MY_SEARCHDEPTH=$((MY_SEARCHDEPTH-1))
+	done
+	cd - &>/dev/null
 }
 
 pkg_config() {
-	einfo "Press ENTER to create the Squeezebox Server database and set proper"
-	einfo "permissions on it.  You will be prompted for the MySQL 'root' user's"
-	einfo "password during this process (note that the MySQL 'root' user is"
-	einfo "independent of the Linux 'root' user and so may have a different"
-	einfo "password)."
+	einfo "Press ENTER to migrate any preferences from a previous installation of"
+	einfo "Squeezebox Server (media-sound/squeezeboxserver) to this installation"
+	einfo "of Logitech Media Server."
 	einfo ""
-	einfo "If you already have a Squeezebox Server database set up then this"
-	einfo "process will clear the existing database (your music files will not,"
-	einfo "however, be affected)."
+	einfo "Note that this will remove any current preferences and plugins and"
+	einfo "therefore you should take a backup if you wish to preseve any files"
+	einfo "from this current Logitech Media Server installation."
 	einfo ""
 	einfo "Alternatively, press Control-C to abort now..."
 	read
 
-	# Get the MySQL root password from the user (not echoed to the terminal)
-	einfo "The MySQL 'root' user password is required to create the"
-	einfo "Squeezebox Server user and database."
-	DONE=0
-	while [ $DONE -eq 0 ]; do
-		trap "stty echo; echo" EXIT
-		stty -echo
-		read -p "MySQL root password: " ROOT_PASSWD; echo
-		stty echo
-		trap ":" EXIT
-		echo quit | mysql --user=root --password="${ROOT_PASSWD}" >/dev/null 2>&1 && DONE=1
-		if [ $DONE -eq 0 ]; then
-			eerror "Incorrect MySQL root password, or MySQL is not running"
-		fi
-	done
-
-	# Get the new password for the Squeezebox Server MySQL database user, and
-	# have it re-entered to confirm it.  We should trivially check it's not
-	# the same as the MySQL root password.
-	einfo "A new MySQL user will be added to own the Squeezebox Server database."
-	einfo "Please enter the password for this new user (${DBUSER})."
-	DONE=0
-	while [ $DONE -eq 0 ]; do
-		trap "stty echo; echo" EXIT
-		stty -echo
-		read -p "MySQL ${DBUSER} password: " DBUSER_PASSWD; echo
-		stty echo
-		trap ":" EXIT
-		if [ -z "$DBUSER_PASSWD" ]; then
-			eerror "The password should not be blank; try again."
-		elif [ "$DBUSER_PASSWD" == "$ROOT_PASSWD" ]; then
-			eerror "The ${DBUSER} password should be different to the root password"
-		else
-			DONE=1
-		fi
-	done
-
-	# Drop the existing database and user - note we don't care about errors
-	# from this as it probably just indicates that the database wasn't
-	# yet present.
-	einfo "Dropping old Squeezebox Server database and user ..."
-	sed -e "s/__DATABASE__/${DBUSER}/" -e "s/__DBUSER__/${DBUSER}/" < "${SHAREDIR}/SQL/mysql/dbdrop-gentoo.sql" | mysql --user=root --password="${ROOT_PASSWD}" >/dev/null 2>&1
-
-	# Drop and create the Squeezebox Server user and database.
-	einfo "Creating Squeezebox Server MySQL user and database (${DBUSER}) ..."
-	sed -e "s/__DATABASE__/${DBUSER}/" -e "s/__DBUSER__/${DBUSER}/" -e "s/__DBPASSWORD__/${DBUSER_PASSWD}/" < "${SHAREDIR}/SQL/mysql/dbcreate-gentoo.sql" | mysql --user=root --password="${ROOT_PASSWD}" || die "Unable to create MySQL database and user"
-
-	# Migrate old preferences, if present.
-	if [ -d "${OLDPREFSDIR}" ]; then
-		if [ -f "${PREFSDIR}/${MIGMARKER}" ]; then
-			einfo ""
-			einfo "Old preferences are present, but they appear to have been"
-			einfo "migrated before. If you would like to re-migrate the old"
-			einfo "SqueezeCenter preferences remove the following file, and"
-			einfo "then restart the configuration."
-			einfo "\t${PREFSDIR}/${MIGMARKER}"
-		else
-			einfo "Migrating old SqueezeCenter preferences"
-			cp -r "${OLDPREFSDIR}" "${VARLIBSBS}"
-			chown -R ${RUN_GID}:${RUN_UID} "${PREFSDIR}"
-			touch "${PREFSDIR}/${MIGMARKER}"
-		fi
+	# Preferences.
+	einfo "Migrating previous Squeezebox Server configuration:"
+	if [ -f "${SBS_SVRPREFS}" ]; then
+		[ -d "${EROOT}${PREFSDIR}" ] && rm -rf "${EROOT}${PREFSDIR}"
+		einfo "\tPreferences (${SBS_PREFSDIR})"
+		cp -r "${EROOT}${SBS_PREFSDIR}" "${EROOT}${PREFSDIR}"
+		chown -R ${RUN_UID}:${RUN_GID} "${EROOT}${PREFSDIR}"
+		chmod -R u+w,g+w "${EROOT}${PREFSDIR}"
+		chmod 770 "${EROOT}${PREFSDIR}"
 	fi
 
-	# Migrate old plugins, if present.
-	if [ -d "${OLDPLUGINSDIR}" ]; then
-		if [ -f "${PLUGINSDIR}/${MIGMARKER}" ]; then
-			einfo ""
-			einfo "Old plugins are present, but they appear to have been"
-			einfo "migrated before. If you would like to re-migrate the old"
-			einfo "SqueezeCenter preferences remove the following file, and"
-			einfo "then restart the configuration."
-			einfo "\t${PLUGINSDIR}/${MIGMARKER}"
-		else
-			einfo "Migrating old SqueezeCenter plugins"
-			cp -r "${OLDPLUGINSDIR}" "${VARLIBSBS}"
-			chown -R ${RUN_GID}:${RUN_UID} "${PLUGINSDIR}"
-			touch "${PLUGINSDIR}/${MIGMARKER}"
-		fi
+	# Plugins installed through the built-in extension manager.
+	if [ -d "${EROOT}${SBS_SVRPLUGINSDIR}" ]; then
+		einfo "\tServer plugins (${SBS_SVRPLUGINSDIR})"
+		[ -d "${EROOT}${SVRPLUGINSDIR}" ] && rm -rf "${EROOT}${SVRPLUGINSDIR}"
+		cp -r "${EROOT}${SBS_SVRPLUGINSDIR}" "${EROOT}${SVRPLUGINSDIR}"
+		chown -R ${RUN_UID}:${RUN_GID} "${EROOT}${SVRPLUGINSDIR}"
+		chmod -R u+w,g+w "${EROOT}${SVRPLUGINSDIR}"
+		chmod 770 "${EROOT}${SVRPLUGINSDIR}"
+	fi
+
+	# Plugins manually installed by the user.
+	if [ -d "${EROOT}${SBS_USRPLUGINSDIR}" ]; then
+		einfo "\tUser plugins (${SBS_USRPLUGINSDIR})"
+		[ -d "${EROOT}${USRPLUGINSDIR}" ] && rm -rf "${EROOT}${USRPLUGINSDIR}"
+		cp -r "${EROOT}${SBS_USRPLUGINSDIR}" "${EROOT}${USRPLUGINSDIR}"
+		chown -R ${RUN_UID}:${RUN_GID} "${EROOT}${USRPLUGINSDIR}"
+		chmod -R u+w,g+w "${EROOT}${USRPLUGINSDIR}"
+		chmod 770 "${EROOT}${USRPLUGINSDIR}"
 	fi
 
 	# Remove the existing MySQL preferences from Squeezebox Server (if any).
-	sc_remove_db_prefs "${PREFS}"
-	[ -f "${LIVE_PREFS}" ] && sc_remove_db_prefs ${LIVE_PREFS}
+	lms_remove_db_prefs "${SVRPREFS}"
 
-	# Insert the external MySQL configuration into the preferences.
-	sc_update_prefs "${PREFS}" "${DBUSER}" "${DBUSER_PASSWD}"
-	[ -f "${LIVE_PREFS}" ] && sc_update_prefs "${LIVE_PREFS}" "${DBUSER}" "${DBUSER_PASSWD}"
+	# Scan system for possible version conflicts
+	lms_clean_oldfiles
 
 	# Phew - all done. Give some tips on what to do now.
-	einfo "Database configuration complete."
+	einfo "Done."
 	einfo ""
-	sc_starting_instr
-}
-
-pkg_preinst() {
-	# Warn the user if there are old preferences that may need migrating.
-	if [ -d "${OLDPREFSDIR}" -a ! -f "${PREFSDIR}/${MIGMARKER}" ]; then
-		if [ ! -z "$(ls ${OLDPREFSDIR})" ]; then
-			ewarn "Note: It appears that old SqueezeCenter preferences are
-installed at:"
-			ewarn "\t${OLDPREFSDIR}"
-			ewarn "These may be migrated by running the following command:"
-			ewarn "\temerge --config =${CATEGORY}/${PF}"
-			ewarn "(Please note that this will require your music collection to
-be rescanned.)"
-			ewarn ""
-		fi
-	fi
 }

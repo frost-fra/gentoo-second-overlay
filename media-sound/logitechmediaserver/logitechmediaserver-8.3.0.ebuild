@@ -17,7 +17,7 @@ SRC_DIR="LogitechMediaServer_v${MY_PV}"
 SRC_URI="http://downloads.slimdevices.com/${SRC_DIR}/${MY_PF}-noCPAN.tgz"
 HOMEPAGE="http://www.mysqueezebox.com/"
 
-KEYWORDS=""
+KEYWORDS="~amd64"
 DESCRIPTION="Logitech Media Server (streaming audio server)"
 LICENSE="${MY_PN}"
 RESTRICT="bindist mirror"

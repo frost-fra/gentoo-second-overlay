@@ -1,4 +1,4 @@
-UUID::Tiny is only maked to support amd64 on Gentoo. Use Data:UUD instead
+UUID::Tiny is only marked to support amd64 on Gentoo. Use Data::UUID instead
 
 
 

@@ -1,4 +1,4 @@
-# Copyright 2020 gordonb3 <gordon@bosvangennip.nl>
+# Copyright 2022 gordonb3 <gordon@bosvangennip.nl>
 # Distributed under the terms of the GNU General Public License v2
 #
 # $Header$
@@ -17,7 +17,7 @@ SRC_DIR="LogitechMediaServer_v${MY_PV}"
 SRC_URI="http://downloads.slimdevices.com/${SRC_DIR}/${MY_PF}-noCPAN.tgz"
 HOMEPAGE="http://www.mysqueezebox.com/"
 
-KEYWORDS="amd64"
+KEYWORDS=""
 DESCRIPTION="Logitech Media Server (streaming audio server)"
 LICENSE="${MY_PN}"
 RESTRICT="bindist mirror"
@@ -106,10 +106,11 @@ SBS_USRPLUGINSDIR="${SBS_VARLIBDIR}/Plugins"
 R1_PREFSDIR="/etc/${MY_PN}"
 
 PATCHES=(
-	"${FILESDIR}/LMS_replace_UUID-Tiny_with_Data-UUID.patch"
-	"${FILESDIR}/LMS-perl-recent.patch"
-	"${FILESDIR}/LMS-8.0.0_remove_softlink_target_check.patch"
-	"${FILESDIR}/LMS-8.2.0_move_client_playlist_path.patch"
+	"${FILESDIR}/LMS-8.3.0_replace_UUID-Tiny_with_Data-UUID.patch"
+	"${FILESDIR}/LMS-8.3.0-perl-recent.patch"
+	"${FILESDIR}/LMS-8.3.0_remove_softlink_target_check.patch"
+	"${FILESDIR}/LMS-8.3.0_AAC_Radio_playback_fix.patch"
+	"${FILESDIR}/LMS-8.3.0_move_client_playlist_path.patch"
 )
 
 
@@ -129,6 +130,7 @@ OBSOLETEDIRS=(
 	"Image"
 	"IO/Interface"
 	"Locale"
+	"Media"
 	"MP3"
 	"Sub"
 	"Template/Namespace"
@@ -230,11 +232,6 @@ src_prepare() {
 	for FILE in ${OBSOLETEFILES[@]} ; do
 		rm -f CPAN/${FILE}
 	done
-
-	# The custom OS module for Gentoo - provides OS-specific path details
-	elog "Import custom paths to match Gentoo specifications"
-	cp "${FILESDIR}/gentoo-filepaths.pm" "Slim/Utils/OS/Custom.pm" || die "Unable to install Gentoo custom OS module"
-	fperms 644 "Slim/Utils/OS/Custom.pm"
 }
 
 src_install() {
@@ -242,7 +239,12 @@ src_install() {
 	elog "Installing package files"
 	dodir "${BINDIR}"
 	cp -aR ${S}/* "${ED}/${BINDIR}" || die "Unable to install package files"
-	rm ${ED}/${BINDIR}/{Changelog*,License*,README.md,revision.txt,SOCKS.txt}
+	rm ${ED}/${BINDIR}/{Changelog*,License*,README.md,SOCKS.txt}
+
+	# The custom OS module for Gentoo - provides OS-specific path details
+	elog "Import custom paths to match Gentoo specifications"
+	cp "${FILESDIR}/gentoo-filepaths.pm" "${ED}/${BINDIR}/Slim/Utils/OS/Custom.pm" || die "Unable to install Gentoo custom OS module"
+	fperms 644 "${BINDIR}/Slim/Utils/OS/Custom.pm"
 
 	# Documentation
 	dodoc Changelog*.html

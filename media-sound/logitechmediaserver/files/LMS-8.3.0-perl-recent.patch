@@ -1,0 +1,66 @@
+Fix various perl runtime warnings
+
+
+
+diff -aur a/CPAN/XML/Parser/Expat.pm b/CPAN/XML/Parser/Expat.pm
+--- a/CPAN/XML/Parser/Expat.pm	2022-11-20 03:20:23.776463395 +0100
++++ b/CPAN/XML/Parser/Expat.pm	2022-11-20 03:22:37.434783083 +0100
+@@ -490,7 +490,7 @@
+   local(*FILE);
+   open(FILE, $_[0]) or  croak "Couldn't open $_[0]:\n$!";
+   binmode(FILE);
+-  my $ret = $self->parse(*FILE);
++  my $ret = $self->parse(\*FILE);
+   close(FILE);
+   $ret;
+ }
+@@ -676,7 +676,7 @@
+                       'End'   => \&eh,
+                       'Char'  => \&ch);
+  open(FOO, '<', 'info.xml') or die "Couldn't open";
+- $parser->parse(*FOO);
++ $parser->parse(\*FOO);
+  close(FOO);
+  # $parser->parse('<foo id="me"> here <em>we</em> go </foo>');
+ 
+diff -aur a/CPAN/XML/Simple.pm b/CPAN/XML/Simple.pm
+--- a/CPAN/XML/Simple.pm	2022-11-20 03:21:04.265954374 +0100
++++ b/CPAN/XML/Simple.pm	2022-11-20 03:23:43.123957258 +0100
+@@ -333,7 +333,7 @@
+     # $tree = $xp->parsefile($filename);  # Changed due to prob w/mod_perl
+     local(*XML_FILE);
+     open(XML_FILE, '<', $filename) || croak qq($filename - $!);
+-    $tree = $xp->parse(*XML_FILE);
++    $tree = $xp->parse(\*XML_FILE);
+     close(XML_FILE);
+   }
+   else {
+diff -aur a/Slim/Control/Request.pm b/Slim/Control/Request.pm
+--- a/Slim/Control/Request.pm	2022-11-20 03:24:49.543122256 +0100
++++ b/Slim/Control/Request.pm	2022-11-20 03:27:49.840855607 +0100
+@@ -1527,7 +1527,8 @@
+ 
+ # get a parameter by name
+ sub getParam {
+-	return $_[0]->{'_params'}->{ $_[1] };
++	my $r = $_[0]->{'_params'}->{ $_[1] };
++	return ($r ne '') ? $r : undef;
+ }
+ 
+ # delete a parameter by name
+diff -aur a/Slim/Music/Info.pm b/Slim/Music/Info.pm
+--- a/Slim/Music/Info.pm	2022-11-20 03:25:05.072927020 +0100
++++ b/Slim/Music/Info.pm	2022-11-20 03:29:04.139921541 +0100
+@@ -803,10 +803,10 @@
+ 	}
+ 
+ 	if ($client) {
+-		$client->musicInfoTextCache($cache);
++#		$client->musicInfoTextCache($cache);
+ 	}
+ 	else {
+-		$musicInfoTextCache = $cache;
++#		$musicInfoTextCache = $cache;
+ 	}
+ 
+ 	return $text;

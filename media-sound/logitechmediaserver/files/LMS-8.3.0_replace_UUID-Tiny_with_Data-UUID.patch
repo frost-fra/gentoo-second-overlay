@@ -1,0 +1,48 @@
+UUID::Tiny is only maked to support amd64 on Gentoo. Use Data:UUD instead
+
+
+
+diff -aur a/Slim/Plugin/UPnP/Events.pm b/Slim/Plugin/UPnP/Events.pm
+--- a/Slim/Plugin/UPnP/Events.pm	2022-11-20 03:09:25.894734089 +0100
++++ b/Slim/Plugin/UPnP/Events.pm	2022-11-20 03:13:10.241913663 +0100
+@@ -13,7 +13,6 @@
+ use HTTP::Date;
+ use URI;
+ use URI::QueryParam;
+-use UUID::Tiny ();
+ 
+ use Slim::Networking::Async;
+ use Slim::Networking::Select;
+@@ -235,7 +234,9 @@
+ 		$service =~ s{/}{::}g;
+ 		my $serviceClass = "Slim::Plugin::UPnP::$service";
+ 		
+-		$uuid = uc( UUID::Tiny::create_UUID_as_string( UUID::Tiny::UUID_V4() ) );
++		require Data::UUID;
++		my $ug = new Data:UUID;
++		$uuid = uc $ug->create_str();
+ 		
+ 		$SUBS{ $uuid } = {
+ 			active    => 0, # Sub is not active until we send it to the subscriber
+@@ -458,4 +459,4 @@
+ 	}
+ }
+ 
+-1;
+\ Kein Zeilenumbruch am Dateiende.
++1;
+diff -aur a/slimserver.pl b/slimserver.pl
+--- a/slimserver.pl	2022-11-20 03:05:58.367343061 +0100
++++ b/slimserver.pl	2022-11-20 03:08:09.745691412 +0100
+@@ -468,8 +468,9 @@
+ 
+ 	# Generate a UUID for this SC instance on first-run
+ 	if ( !$prefs->get('server_uuid') ) {
+-		require UUID::Tiny;
+-		$prefs->set( server_uuid => UUID::Tiny::create_UUID_as_string( UUID::Tiny::UUID_V4() ) );
++		require Data::UUID;
++		my $ug = new Data::UUID;
++		$prefs->set( server_uuid => lc $ug->create_str() );
+ 	}
+ 
+ 	main::INFOLOG && $log->info("Server binary search path init...");

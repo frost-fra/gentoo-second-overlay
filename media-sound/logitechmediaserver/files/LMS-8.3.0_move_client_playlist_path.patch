@@ -1,0 +1,16 @@
+Move client playlists away from the preferences folder
+
+
+
+diff -aur a/Slim/Player/Playlist.pm b/Slim/Player/Playlist.pm
+--- a/Slim/Player/Playlist.pm	2022-11-20 03:32:42.097181447 +0100
++++ b/Slim/Player/Playlist.pm	2022-11-20 03:34:10.146074523 +0100
+@@ -1189,7 +1189,7 @@
+ 	$id =~ s/://g;
+ 
+ 	return Slim::Utils::Misc::fileURLFromPath(
+-		catfile(scalar Slim::Utils::OSDetect::dirsFor('prefs'), "clientplaylist_$id.m3u")
++		catfile(scalar Slim::Utils::OSDetect::dirsFor('ClientPlaylists'), "clientplaylist_$id.m3u")
+ 	);
+ }
+ 

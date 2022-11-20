@@ -67,7 +67,9 @@ RDEPEND="
 	dev-perl/YAML-LibYAML
 	dev-perl/MP3-Cut-Gapless
 	l10n_he? ( dev-perl/Locale-Hebrew )
-	mp3? ( media-sound/lame )
+	mp3? ( media-sound/lame
+		media-sound/mpg123[int-quality]
+	)
 	wavpack? ( media-sound/wavpack )
 	flac? (
 		media-libs/flac

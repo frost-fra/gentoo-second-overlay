@@ -1,0 +1,37 @@
+--- a/GNUmakefile	2022-05-06 15:52:18.773585683 +0200
++++ b/GNUmakefile	2022-05-06 17:57:10.389655589 +0200
+@@ -36,14 +36,9 @@
+ GO_BUILD_ARGS += -gcflags "$(GCFLAGS)"
+ endif
+ 
+-ifeq ($(OS), Windows_NT)
+-	VERSION := $(shell git describe --exact-match --tags 2>nil)
+-else
+-	VERSION := $(shell git describe --exact-match --tags 2>/dev/null)
+-endif
+-COMMIT := $(shell git rev-parse --short HEAD)
++VERSION := "{PV}"
+ 
+-LDFLAGS := $(LDFLAGS) -X main.commit=$(COMMIT)
++LDFLAGS := $(LDFLAGS)
+ ifdef VERSION
+ 	LDFLAGS += -X main.version=$(VERSION)
+ endif
+@@ -62,7 +57,7 @@
+ export GO_GENERATE=go generate $(GO_BUILD_ARGS)
+ export GO_VET=env GO111MODULE=on go vet $(GO_TEST_ARGS)
+ export GO_RUN=env GO111MODULE=on go run $(GO_BUILD_ARGS)
+-export PATH := $(PWD)/bin/$(GOOS):$(PATH)
++export PATH := $(PWD)/bin:$(PWD)/bin/$(GOOS):$(PATH)
+ 
+ 
+ # All go source files
+@@ -130,7 +125,7 @@
+ generate: generate-web-assets generate-sources
+ 
+ protoc:
+-	$(GO_INSTALL) google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
++	$(GO_INSTALL) google.golang.org/protobuf/cmd/protoc-gen-go
+ 
+ tmpl:
+ 	$(GO_INSTALL) github.com/benbjohnson/tmpl

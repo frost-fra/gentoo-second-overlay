@@ -88,7 +88,6 @@ DEPEND="${RDEPEND}
 "
 RDEPEND="${RDEPEND}
 	pam? ( >=sys-auth/pambase-20081028 )
-	userland_GNU? ( !prefix? ( sys-apps/shadow ) )
 	X? ( x11-apps/xauth )
 "
 BDEPEND="

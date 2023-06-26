@@ -31,6 +31,8 @@ KEYWORDS="~amd64 ~arm ~arm64 ~x86" # Untested: arm64 x86
 IUSE="+audit debug pie static"
 
 DEPEND="${DEPEND}
+        acct-user/mattermost
+        acct-group/mattermost
 	>net-libs/nodejs-6[npm]
 "
 RDEPEND="!www-apps/mattermost-server-ee"
@@ -57,11 +59,6 @@ pkg_pretend() {
 			ewarn
 		fi
 	fi
-}
-
-pkg_setup() {
-	enewgroup mattermost
-	enewuser mattermost -1 -1 -1 mattermost
 }
 
 src_unpack() {

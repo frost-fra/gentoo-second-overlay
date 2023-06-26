@@ -15,7 +15,7 @@ if [[ "$ARCH" != "x86" && "$ARCH" != "amd64" ]]; then
 	DEPEND="media-libs/libpng:0"
 fi
 
-inherit ${INHERIT} golang-vcs-snapshot systemd user
+inherit ${INHERIT} golang-vcs-snapshot systemd
 
 DESCRIPTION="Open source Slack-alternative in Golang and React (Team Edition)"
 HOMEPAGE="https://mattermost.com"

@@ -71,8 +71,10 @@ src_unpack() {
 src_prepare() {
 	local datadir="${EPREFIX}/var/lib/mattermost"
 	einfo "Starte die Erstellung der default.json Datei"
+        einfo "Die OUTPUT_CONFIG Variable lautet: ${S}/config/default.json"
+        einfo "mygoargs sind ${mygoargs[@]}"
 
-	OUTPUT_CONFIG="${S}/config/default.json" go generate "${mygoargs[@]}" ./config || die
+	OUTPUT_CONFIG="${S}/config/default.json" go "${mygoargs[@]}" run ./scripts/config_generator || die
 
 	# Disable developer settings, fix path, set to listen localhost
 	# and disable diagnostics (call home) by default.

@@ -112,7 +112,6 @@ src_compile() {
 	export GOBIN="${S}"
 	export CGO_CFLAGS="${CFLAGS}"
 	export CGO_LDFLAGS="${LDFLAGS}"
-	export NODE_OPTIONS=--openssl-legacy-provider
 	(use static && ! use pie) && export CGO_ENABLED=0
 	(use static && use pie) && CGO_LDFLAGS+=" -static"
 

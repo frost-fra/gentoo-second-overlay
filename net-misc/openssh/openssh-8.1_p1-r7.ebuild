@@ -92,7 +92,7 @@ RDEPEND="${RDEPEND}
 "
 BDEPEND="
 	virtual/pkgconfig
-	sys-devel/autoconf
+	dev-build/autoconf
 "
 
 pkg_pretend() {

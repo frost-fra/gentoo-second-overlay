@@ -41,31 +41,39 @@ DEPEND="
 "
 
 # Runtime dependencies.
+# Um alle Dependencies zu finden kann man sich wie folgt behelfen.
+# Im Github Repository findet man diese an der Folgenden Stelle:
+# https://github.com/LMS-Community/slimserver/tree/<Branch>/<Tag>/CPAN/arch/<Aktuelle Perl Version auf dem Zielsystem>/
+# Dort dann in den Unterverzeichnissen alle die Compiliert werden hier bis
+# dev-perl/JSON-XS und dann der Rest im Ordner x86_64-linux-thread-multi/auto
+# beginnend ab dev-perl/Digest-SHA1
+# Es muessen sich alle in dem auto Ordner befindlichen Perl Pakete
+# hier im ebuild auch als Runtime Dependencies wiederfinden
 RDEPEND="
 	virtual/logger
 	dev-db/sqlite
-	>=dev-lang/perl-5.8.8[ithreads]
-	>=dev-perl/Data-UUID-1.202
+	>=dev-lang/perl-5.38.0[ithreads]
+	>=dev-perl/Data-UUID-1.226
 	=dev-perl/Audio-Scan-1.10
-	>=dev-perl/Class-XSAccessor-1.180.0
+	>=dev-perl/Class-XSAccessor-1.190.0
 	dev-perl/CGI
 	dev-perl/Class-C3-XS
 	dev-perl/DBD-SQLite
 	dev-perl/DBI
-	dev-perl/Digest-SHA1
-	dev-perl/Encode-Detect
-	dev-perl/EV
-	dev-perl/HTML-Parser
 	dev-perl/Image-Scale[gif,jpeg,png]
+	dev-perl/JSON-XS
+	dev-perl/Digest-SHA1
+	dev-perl/EV
+	dev-perl/Encode-Detect
+	dev-perl/HTML-Parser
 	dev-perl/IO-AIO
 	dev-perl/IO-Interface
-	dev-perl/JSON-XS
 	dev-perl/Linux-Inotify2
+	dev-perl/MP3-Cut-Gapless
 	dev-perl/Sub-Name
 	dev-perl/Template-Toolkit[gd]
 	dev-perl/XML-Parser
 	dev-perl/YAML-LibYAML
-	dev-perl/MP3-Cut-Gapless
 	l10n_he? ( dev-perl/Locale-Hebrew )
 	mp3? ( media-sound/lame
 		media-sound/mpg123[int-quality]

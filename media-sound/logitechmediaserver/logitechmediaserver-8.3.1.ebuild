@@ -255,6 +255,13 @@ src_install() {
 	cp "${FILESDIR}/gentoo-filepaths.pm" "${ED}/${BINDIR}/Slim/Utils/OS/Custom.pm" || die "Unable to install Gentoo custom OS module"
 	fperms 644 "${BINDIR}/Slim/Utils/OS/Custom.pm"
 
+	# Install my own convert.conf file instead of the default one
+	elog "Sichernd der besteheden convert.conf Datei"
+	elog "Bennene die Datei ${ED}/${BINDIR}/convert.conf in ${ED}/${BINDIR}/convert.conf um"
+	elog "Ich fuege nun meine eigene convert.conf Datei hinzu"
+	elog "Kopiere die Datei ${FILESDIR}/${MY_PF}.convert.conf nach ${FILESDIR}/${MY_PF}.convert.conf"
+
+
 	# Documentation
 	dodoc Changelog*.html
 	dodoc License*.txt

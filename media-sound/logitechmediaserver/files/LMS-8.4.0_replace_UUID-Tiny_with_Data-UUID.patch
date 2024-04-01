@@ -1,0 +1,46 @@
+diff -Naur a/Slim/Plugin/UPnP/Events.pm b/Slim/Plugin/UPnP/Events.pm
+--- a/Slim/Plugin/UPnP/Events.pm	2024-04-01 03:16:20.822897724 +0200
++++ b/Slim/Plugin/UPnP/Events.pm	2024-04-01 03:20:31.532900272 +0200
+@@ -13,7 +13,6 @@
+ use HTTP::Date;
+ use URI;
+ use URI::QueryParam;
+-use UUID::Tiny ();
+ 
+ use Slim::Networking::Async;
+ use Slim::Networking::Select;
+@@ -234,8 +233,10 @@
+ 		my ($service) = $request->uri->path =~ m{plugins/UPnP/(.+)/eventsub};
+ 		$service =~ s{/}{::}g;
+ 		my $serviceClass = "Slim::Plugin::UPnP::$service";
+-		
+-		$uuid = uc( UUID::Tiny::create_UUID_as_string( UUID::Tiny::UUID_V4() ) );
++
++		require Data::UUID;
++		my $ug = new Data:UUID;
++		$uuid = uc $ug->create_str();		
+ 		
+ 		$SUBS{ $uuid } = {
+ 			active    => 0, # Sub is not active until we send it to the subscriber
+@@ -458,4 +459,4 @@
+ 	}
+ }
+ 
+-1;
+\ Kein Zeilenumbruch am Dateiende.
++1;
+diff -Naur a/slimserver.pl b/slimserver.pl
+--- a/slimserver.pl	2024-04-01 03:21:41.082900978 +0200
++++ b/slimserver.pl	2024-04-01 03:23:00.832901789 +0200
+@@ -477,8 +477,9 @@
+ 
+ 	# Generate a UUID for this SC instance on first-run
+ 	if ( !$prefs->get('server_uuid') ) {
+-		require UUID::Tiny;
+-		$prefs->set( server_uuid => UUID::Tiny::create_UUID_as_string( UUID::Tiny::UUID_V4() ) );
++		require Data::UUID;
++		my $ug = new Data::UUID;
++		$prefs->set( server_uuid => lc $ug->create_str() );
+ 	}
+ 
+ 	main::INFOLOG && $log->info("Server binary search path init...");

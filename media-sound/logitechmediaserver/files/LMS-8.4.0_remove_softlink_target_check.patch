@@ -1,0 +1,19 @@
+diff -Naur a/Slim/Utils/Misc.pm b/Slim/Utils/Misc.pm
+--- a/Slim/Utils/Misc.pm	2024-04-01 11:18:08.944409207 +0200
++++ b/Slim/Utils/Misc.pm	2024-04-01 11:20:12.814410466 +0200
+@@ -891,15 +891,6 @@
+ 	elsif ($validRE && -f _) {
+ 		return 0 if $item !~ $validRE;
+ 	}
+-	elsif ($validRE && -l _ && defined ($target = readlink($fullpath))) {
+-		# fix relative/absolute path
+-		$target = ($target =~ /^\// ? $target : catdir($dirname, $target));
+-
+-		if (-f $target) {
+-			return 0 if $target !~ $validRE;
+-		}
+-	}
+-
+ 	return 1;
+ }
+ 

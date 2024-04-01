@@ -1,0 +1,12 @@
+diff -Naur a/Slim/Player/Playlist.pm b/Slim/Player/Playlist.pm
+--- a/Slim/Player/Playlist.pm	2024-04-01 12:10:13.793622947 +0200
++++ b/Slim/Player/Playlist.pm	2024-04-01 12:11:08.782931637 +0200
+@@ -1219,7 +1219,7 @@
+ 	$id =~ s/://g;
+ 
+ 	return Slim::Utils::Misc::fileURLFromPath(
+-		catfile(scalar Slim::Utils::OSDetect::dirsFor('prefs'), "clientplaylist_$id.m3u")
++		catfile(scalar Slim::Utils::OSDetect::dirsFor('ClientPlaylists'), "clientplaylist_$id.m3u")
+ 	);
+ }
+ 

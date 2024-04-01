@@ -257,7 +257,7 @@ src_install() {
 
 	# Install my own convert.conf file instead of the default one
 	elog "Sichernd der besteheden convert.conf Datei"
-	elog "Bennene die Datei ${ED}/${BINDIR}/convert.conf in ${ED}/${BINDIR}/convert.conf um"
+	elog "Bennene die Datei ${ED}${BINDIR}/convert.conf in ${ED}${BINDIR}/convert.conf um"
 	elog "Ich fuege nun meine eigene convert.conf Datei hinzu"
 	elog "Kopiere die Datei ${FILESDIR}/${MY_PF}.convert.conf nach ${FILESDIR}/${MY_PF}.convert.conf"
 

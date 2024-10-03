@@ -14,7 +14,7 @@ MY_PF="${MY_PN}-${MY_PV}"
 S="${WORKDIR}/${MY_PF}-noCPAN"
 
 SRC_DIR="LogitechMediaServer_v${MY_PV}"
-SRC_URI="http://downloads.slimdevices.com/${SRC_DIR}/${MY_PF}-noCPAN.tgz"
+SRC_URI="http://archive.lms-community.org/${SRC_DIR}/${MY_PF}-noCPAN.tgz"
 HOMEPAGE="http://www.mysqueezebox.com/"
 
 KEYWORDS="~amd64"
@@ -50,9 +50,9 @@ DEPEND="
 # Es muessen sich alle in dem auto Ordner befindlichen Perl Pakete
 # hier im ebuild auch als Runtime Dependencies wiederfinden
 RDEPEND="
+	|| ( >=dev-lang/perl-5.38.2-r3[perl_features_ithreads] <dev-lang/perl-5.38.2-r3[ithreads] )
 	virtual/logger
 	dev-db/sqlite
-	>=dev-lang/perl-5.38.0[ithreads]
 	>=dev-perl/Data-UUID-1.226
 	=dev-perl/Audio-Scan-1.10
 	>=dev-perl/Class-XSAccessor-1.190.0

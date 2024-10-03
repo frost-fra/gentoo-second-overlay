@@ -260,8 +260,8 @@ src_install() {
 	elog "Bennene die Datei ${ED}${BINDIR}/convert.conf in ${ED}${BINDIR}/convert.conf.orig um"
 	mv "${ED}${BINDIR}/convert.conf" "${ED}${BINDIR}/convert.conf.orig"
 	elog "Ich fuege nun meine eigene convert.conf Datei hinzu"
-	elog "Kopiere die Datei ${FILESDIR}/${MY_PF}.convert.conf nach ${ED}${BINDIR}/convert.conf"
-	cp -a "${FILESDIR}/${MY_PF}.convert.conf" "${ED}${BINDIR}/convert.conf"
+	elog "Kopiere die Datei ${FILESDIR}/${MY_PN}-8.5.0.convert.conf nach ${ED}${BINDIR}/convert.conf"
+	cp -a "${FILESDIR}/${MY_PN}-8.5.0.convert.conf" "${ED}${BINDIR}/convert.conf"
 
 	# Documentation
 	dodoc Changelog*.html

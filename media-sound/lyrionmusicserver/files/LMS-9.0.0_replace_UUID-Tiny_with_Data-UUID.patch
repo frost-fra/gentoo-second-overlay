@@ -1,7 +1,6 @@
-diff -Naur a/Slim/Plugin/UPnP/Events.pm b/Slim/Plugin/UPnP/Events.pm
---- a/Slim/Plugin/UPnP/Events.pm	2024-04-01 12:27:55.720272721 +0200
-+++ b/Slim/Plugin/UPnP/Events.pm	2024-04-01 12:29:44.348907074 +0200
-@@ -13,7 +13,6 @@
+--- a/Slim/Plugin/UPnP/Events.pm	2025-01-05 03:06:23.294751161 +0100
++++ b/Slim/Plugin/UPnP/Events.pm	2025-01-05 03:07:55.783588419 +0100
+@@ -14,7 +14,6 @@
  use HTTP::Date;
  use URI;
  use URI::QueryParam;
@@ -9,28 +8,27 @@ diff -Naur a/Slim/Plugin/UPnP/Events.pm b/Slim/Plugin/UPnP/Events.pm
  
  use Slim::Networking::Async;
  use Slim::Networking::Select;
-@@ -235,7 +234,9 @@
+@@ -236,7 +235,9 @@
  		$service =~ s{/}{::}g;
  		my $serviceClass = "Slim::Plugin::UPnP::$service";
- 		
+ 
 -		$uuid = uc( UUID::Tiny::create_UUID_as_string( UUID::Tiny::UUID_V4() ) );
 +		require Data::UUID;
 +		my $ug = new Data:UUID;
 +		$uuid = uc $ug->create_str();
- 		
+ 
  		$SUBS{ $uuid } = {
  			active    => 0, # Sub is not active until we send it to the subscriber
-@@ -458,4 +459,4 @@
+@@ -459,4 +460,4 @@
  	}
  }
  
 -1;
 \ Kein Zeilenumbruch am Dateiende.
 +1;
-diff -Naur a/slimserver.pl b/slimserver.pl
---- a/slimserver.pl	2024-04-01 12:30:27.688362223 +0200
-+++ b/slimserver.pl	2024-04-01 12:31:23.677658342 +0200
-@@ -477,8 +477,9 @@
+--- a/slimserver.pl	2025-01-05 03:11:51.920619774 +0100
++++ b/slimserver.pl	2025-01-05 03:12:58.109787664 +0100
+@@ -478,8 +478,9 @@
  
  	# Generate a UUID for this SC instance on first-run
  	if ( !$prefs->get('server_uuid') ) {

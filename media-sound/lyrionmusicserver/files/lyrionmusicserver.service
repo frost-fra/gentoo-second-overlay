@@ -1,0 +1,17 @@
+# unit file for media-sound/logitechmediaserver-bin
+#
+# Thanks to Caj Zell for the draft.
+
+[Unit]
+Description=Lyrion Music Server Daemon
+After=network.target
+
+[Service]
+User=lyrionmusicserver
+Group=lyrionmusicserver
+WorkingDirectory=/opt/lyrionmusicserver
+#EnvironmentFile=/etc/conf.d/lyrionmusicserver
+ExecStart=/opt/lyrionmusicserver/slimserver.pl --prefsdir=/var/lib/lyrionmusicserver/preferences --cachedir=/var/lib/lyrionmusicserver/cache --logfile=syslog $LMS_OPTS
+
+[Install]
+WantedBy=network.target

@@ -62,7 +62,6 @@ RDEPEND="
 	|| ( >=dev-lang/perl-5.38.2-r3[perl_features_ithreads] <dev-lang/perl-5.38.2-r3[ithreads] )
 	virtual/logger
 	dev-db/sqlite
-	>=dev-lang/perl-5.38.0[ithreads]
 	>=dev-perl/Data-UUID-1.226
 	=dev-perl/Audio-Scan-1.10
 	>=dev-perl/Class-XSAccessor-1.190.0

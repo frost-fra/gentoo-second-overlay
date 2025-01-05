@@ -126,7 +126,7 @@ R1_PREFSDIR="/etc/${MY_PN}"
 
 PATCHES=(
 	"${FILESDIR}/LMS-9.0.0_replace_UUID-Tiny_with_Data-UUID.patch"
-	"${FILESDIR}/LMS-9.0.0-perl-recent.patch"
+	"${FILESDIR}/LMS-9.0.0_perl-recent.patch"
 )
 
 

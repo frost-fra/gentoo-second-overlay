@@ -1,7 +1,6 @@
-diff -Naur a/Slim/Player/Playlist.pm b/Slim/Player/Playlist.pm
---- a/Slim/Player/Playlist.pm	2024-04-01 12:10:13.793622947 +0200
-+++ b/Slim/Player/Playlist.pm	2024-04-01 12:11:08.782931637 +0200
-@@ -1219,7 +1219,7 @@
+--- a/Slim/Player/Playlist.pm	2025-01-05 13:40:29.455847134 +0100
++++ b/Slim/Player/Playlist.pm	2025-01-05 13:41:53.784786976 +0100
+@@ -1224,7 +1224,7 @@
  	$id =~ s/://g;
  
  	return Slim::Utils::Misc::fileURLFromPath(

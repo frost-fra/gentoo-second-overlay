@@ -6,7 +6,7 @@ EAPI=7
 inherit acct-user
 
 DESCRIPTION="A user for the Lyrion Music Server"
-ACCT_USER_ID=111
+ACCT_USER_ID=110
 ACCT_USER_GROUPS=( lyrionmusicserver )
 
 acct-user_add_deps

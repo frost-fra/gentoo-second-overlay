@@ -1,0 +1,58 @@
+--- a/CPAN/XML/Parser/Expat.pm	2025-01-05 03:58:20.915557359 +0100
++++ b/CPAN/XML/Parser/Expat.pm	2025-01-05 03:59:57.324345337 +0100
+@@ -490,7 +490,7 @@
+   local(*FILE);
+   open(FILE, $_[0]) or  croak "Couldn't open $_[0]:\n$!";
+   binmode(FILE);
+-  my $ret = $self->parse(*FILE);
++  my $ret = $self->parse(\*FILE);
+   close(FILE);
+   $ret;
+ }
+@@ -676,7 +676,7 @@
+                       'End'   => \&eh,
+                       'Char'  => \&ch);
+  open(FOO, '<', 'info.xml') or die "Couldn't open";
+- $parser->parse(*FOO);
++ $parser->parse(\*FOO);
+  close(FOO);
+  # $parser->parse('<foo id="me"> here <em>we</em> go </foo>');
+ 
+--- a/CPAN/XML/Simple.pm	2025-01-05 04:01:36.231413004 +0100
++++ b/CPAN/XML/Simple.pm	2025-01-05 04:02:16.810902851 +0100
+@@ -333,7 +333,7 @@
+     # $tree = $xp->parsefile($filename);  # Changed due to prob w/mod_perl
+     local(*XML_FILE);
+     open(XML_FILE, '<', $filename) || croak qq($filename - $!);
+-    $tree = $xp->parse(*XML_FILE);
++    $tree = $xp->parse(\*XML_FILE);
+     close(XML_FILE);
+   }
+   else {
+--- a/Slim/Control/Request.pm	2025-01-05 04:04:47.899003416 +0100
++++ b/Slim/Control/Request.pm	2025-01-05 04:06:42.567561837 +0100
+@@ -1530,7 +1530,8 @@
+ 
+ # get a parameter by name
+ sub getParam {
+-	return $_[0]->{'_params'}->{ $_[1] };
++	my $r = $_[0]->{'_params'}->{ $_[1] };
++	return ($r ne '') ? $r : undef;
+ }
+ 
+ # delete a parameter by name
+--- a/Slim/Music/Info.pm	2025-01-05 04:08:27.676240442 +0100
++++ b/Slim/Music/Info.pm	2025-01-05 04:09:20.345578299 +0100
+@@ -808,10 +808,10 @@
+ 	}
+ 
+ 	if ($client) {
+-		$client->musicInfoTextCache($cache);
++#		$client->musicInfoTextCache($cache);
+ 	}
+ 	else {
+-		$musicInfoTextCache = $cache;
++#		$musicInfoTextCache = $cache;
+ 	}
+ 
+ 	return $text;

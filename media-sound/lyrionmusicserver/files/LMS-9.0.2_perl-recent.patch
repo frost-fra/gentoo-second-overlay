@@ -1,0 +1,38 @@
+--- a/CPAN/XML/Simple.pm	2025-01-05 04:01:36.231413004 +0100
++++ b/CPAN/XML/Simple.pm	2025-01-05 04:02:16.810902851 +0100
+@@ -333,7 +333,7 @@
+     # $tree = $xp->parsefile($filename);  # Changed due to prob w/mod_perl
+     local(*XML_FILE);
+     open(XML_FILE, '<', $filename) || croak qq($filename - $!);
+-    $tree = $xp->parse(*XML_FILE);
++    $tree = $xp->parse(\*XML_FILE);
+     close(XML_FILE);
+   }
+   else {
+--- a/Slim/Control/Request.pm	2025-01-05 04:04:47.899003416 +0100
++++ b/Slim/Control/Request.pm	2025-01-05 04:06:42.567561837 +0100
+@@ -1530,7 +1530,8 @@
+ 
+ # get a parameter by name
+ sub getParam {
+-	return $_[0]->{'_params'}->{ $_[1] };
++	my $r = $_[0]->{'_params'}->{ $_[1] };
++	return ($r ne '') ? $r : undef;
+ }
+ 
+ # delete a parameter by name
+--- a/Slim/Music/Info.pm	2025-01-05 04:08:27.676240442 +0100
++++ b/Slim/Music/Info.pm	2025-01-05 04:09:20.345578299 +0100
+@@ -808,10 +808,10 @@
+ 	}
+ 
+ 	if ($client) {
+-		$client->musicInfoTextCache($cache);
++#		$client->musicInfoTextCache($cache);
+ 	}
+ 	else {
+-		$musicInfoTextCache = $cache;
++#		$musicInfoTextCache = $cache;
+ 	}
+ 
+ 	return $text;

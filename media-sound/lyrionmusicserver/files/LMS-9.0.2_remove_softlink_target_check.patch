@@ -1,0 +1,18 @@
+--- a/Slim/Utils/Misc.pm	2025-01-05 13:21:43.200006087 +0100
++++ b/Slim/Utils/Misc.pm	2025-01-05 13:23:08.098938763 +0100
+@@ -892,15 +892,6 @@
+ 	elsif ($validRE && -f _) {
+ 		return 0 if $item !~ $validRE;
+ 	}
+-	elsif ($validRE && -l _ && defined ($target = readlink($fullpath))) {
+-		# fix relative/absolute path
+-		$target = ($target =~ /^\// ? $target : catdir($dirname, $target));
+-
+-		if (-f $target) {
+-			return 0 if $target !~ $validRE;
+-		}
+-	}
+-
+ 	return 1;
+ }
+ 

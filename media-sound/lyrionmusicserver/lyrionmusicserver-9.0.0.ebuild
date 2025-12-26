@@ -63,7 +63,7 @@ RDEPEND="
 	virtual/logger
 	dev-db/sqlite
 	>=dev-perl/Data-UUID-1.226
-	=dev-perl/Audio-Scan-1.10
+	=dev-perl/Audio-Scan-1.11
 	>=dev-perl/Class-XSAccessor-1.190.0
 	dev-perl/CGI
 	dev-perl/Class-C3-XS

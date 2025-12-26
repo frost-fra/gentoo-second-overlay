@@ -3,7 +3,6 @@
 
 EAPI=7
 
-PYTHON_COMPAT=( python3_{12..14} )
 DIST_AUTHOR=AGRUNDMA
 DIST_VERSION=0.03
 inherit perl-module

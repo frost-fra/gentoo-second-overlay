@@ -1,0 +1,59 @@
+--- a/Slim/Utils/Misc.pm	2025-12-27 00:11:05.130652648 +0100
++++ b/Slim/Utils/Misc.pm	2025-12-27 00:10:03.791423787 +0100
+@@ -896,12 +896,52 @@
+ 	elsif ($validRE && -f _) {
+ 		return 0 if $item !~ $validRE;
+ 	}
+-	elsif ($validRE && -l _ && defined ($target = readlink($fullpath))) {
+-		# fix relative/absolute path
+-		$target = ($target =~ /^\// ? $target : catdir($dirname, $target));
++	# IMPROVED SYMLINK HANDLING - replaces buggy original code - created 2025.12.27
++	elsif ($validRE && -l _) {
++		# Read the symlink target
++		$target = readlink($fullpath);
+ 
++		# Reject if we cannot read the symlink (permissions, etc.)
++		if (!defined $target) {
++			main::DEBUGLOG && $osfileslog->is_debug && $osfileslog->debug("Cannot read symlink: $fullpath - $!");
++			return 0;
++		}
++
++		# Convert relative path to absolute path
++		if ($target !~ /^\//) {
++			$target = catdir($dirname, $target);
++		}
++
++		# Normalize the path (remove ./ and ../ components)
++		$target = File::Spec->canonpath($target);
++
++		# Reject broken symlinks (target doesn't exist) or unreadable targets
++		if (!-e $target) {
++			main::DEBUGLOG && $osfileslog->is_debug && $osfileslog->debug("Broken symlink (target does not exist): $fullpath -> $target");
++			return 0;
++		}
++
++		if (!-r $target) {
++			main::DEBUGLOG && $osfileslog->is_debug && $osfileslog->debug("Symlink target not readable: $fullpath -> $target");
++			return 0;
++		}
++
++		# If target is a regular file, validate its extension
+ 		if (-f $target) {
+-			return 0 if $target !~ $validRE;
++			if ($target !~ $validRE) {
++				main::DEBUGLOG && $osfileslog->is_debug && $osfileslog->debug("Symlink to file with invalid extension: $fullpath -> $target");
++				return 0;
++			}
++		}
++		# If target is a directory, accept it (will be scanned recursively)
++		elsif (-d $target) {
++			# Directory symlinks are OK - they will be scanned like regular directories
++			main::DEBUGLOG && $osfileslog->is_debug && $osfileslog->debug("Accepting directory symlink: $fullpath -> $target");
++		}
++		# Target is neither file nor directory (socket, pipe, device, etc.) - reject
++		else {
++			main::DEBUGLOG && $osfileslog->is_debug && $osfileslog->debug("Symlink target is special file (not regular file or directory): $fullpath -> $target");
++			return 0;
+ 		}
+ 	}
+ 

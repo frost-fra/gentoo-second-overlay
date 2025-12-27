@@ -129,6 +129,7 @@ PATCHES=(
 	"${FILESDIR}/LMS-9.0.3_perl-recent.patch"
 	"${FILESDIR}/LMS-9.0.3_improved_softlink_target_check.patch"
 	"${FILESDIR}/LMS-9.0.3_move_client_playlist_path.patch"
+	"${FILESDIR}/LMS-9.0.3_enable_Proxy_Support_for_HTTPS_Connections.patch"
 )
 
 

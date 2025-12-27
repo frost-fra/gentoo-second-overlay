@@ -1,0 +1,11 @@
+--- a/Slim/Networking/Async/HTTP.pm	2025-12-27 02:27:28.419544974 +0100
++++ b/Slim/Networking/Async/HTTP.pm	2025-12-27 02:26:57.759930418 +0100
+@@ -175,7 +175,7 @@
+ 	if ( my $proxy = $prefs->get('webproxy') ) {
+ 		my $host   = $self->request->uri->host;
+ 		my $scheme = $self->request->uri->scheme;
+-		if ( $scheme ne 'https' && $host !~ /(?:localhost|127.0.0.1)/ ) {
++		if ( $scheme =~ /^https?$/ && $host !~ /(?:localhost|127.0.0.1)/ ) {
+ 			return $proxy;
+ 		}
+ 	}

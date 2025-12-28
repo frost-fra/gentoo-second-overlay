@@ -1,0 +1,45 @@
+================================================================================
+PATCH: HTML/EN/settings/server/status.html
+================================================================================
+Description:
+  Extends the server status web template to display the internet
+  access section between server status and Perl module versions.
+
+Changes:
+  - Adds PROCESS infoItem for INFORMATION_MENU_INTERNET_ACCESS
+  - Position: after SERVER_STATUS, before INFORMATION_MENU_PERL
+  - Uses internetaccess.items (provided by Status.pm)
+  - Renders section title and status lines
+
+Template Processing:
+  The infoItem block renders:
+    - Section header with translated title
+    - Individual items (HTTP status, HTTPS status)
+    - Proxy information if configured
+    - All text properly localized via string tokens
+
+Technical Details:
+  - Template Toolkit syntax: [% PROCESS infoItem ... %]
+  - Variable names match provider registration names
+  - Section ordering controlled by template line order
+  - Renders for all supported languages (17 languages)
+
+Requirements:
+  - Status.pm must provide internetaccess variable
+  - strings.txt must contain all INTERNET_ACCESS_* strings
+  - Browser must support UTF-8 encoding
+
+Author: Markus Baier
+Date: 2025-12-28
+================================================================================
+
+--- a/HTML/EN/settings/server/status.html	2025-12-28 01:27:49.271043836 +0100
++++ b/HTML/EN/settings/server/status.html	2025-12-28 03:23:07.354837673 +0100
+@@ -52,6 +52,7 @@
+ [% END %]
+ 
+ [% PROCESS infoItem title="SERVER_STATUS" items=server.items %]
++[% PROCESS infoItem title="INFORMATION_MENU_INTERNET_ACCESS" items=internetaccess.items %]
+ [% PROCESS infoItem title="INFORMATION_MENU_PERL" items=perl.items %]
+ 
+ [% IF library; PROCESS infoItem title="INFORMATION_MENU_LIBRARY" items=library.items; END %]

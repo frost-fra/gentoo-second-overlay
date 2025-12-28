@@ -1,0 +1,45 @@
+================================================================================
+PATCH: Slim/Web/Settings/Server/Status.pm
+================================================================================
+Description:
+  Extends Status.pm to extract and pass the internet access section
+  to the web template for display on the server status page.
+
+Changes:
+  - Adds extraction of 'internetaccess' provider data
+  - Uses _extractGroup() to extract INFORMATION_MENU_INTERNET_ACCESS
+  - Position: after 'server', before 'perl' (consistent with SystemInfo.pm)
+  - Makes internetaccess.items available to the template
+
+Technical Details:
+  - The _extractGroup() function searches the menu items array
+  - Extracts items matching the INFORMATION_MENU_INTERNET_ACCESS name
+  - Creates $paramRef->{internetaccess} for template access
+  - Required for web interface display (CLI/Apps work without this)
+
+Flow:
+  - SystemInfo.pm → generates menu items
+  - Status.pm → extracts and groups items by name
+  - status.html → renders grouped items in web interface
+
+Requirements:
+  - SystemInfo.pm patch must be applied first
+  - strings.txt must contain INFORMATION_MENU_INTERNET_ACCESS
+  - status.html template must be patched
+
+Author: Markus Baier
+Date: 2025-12-28
+================================================================================
+
+
+
+--- a/Slim/Web/Settings/Server/Status.pm	2025-12-28 02:29:18.074490056 +0100
++++ b/Slim/Web/Settings/Server/Status.pm	2025-12-28 03:18:46.478117337 +0100
+@@ -31,6 +31,7 @@
+ 	$paramRef->{info} = $paramRef->{info}->{items};
+ 
+ 	$paramRef->{server}  = _extractGroup($paramRef, cstring($client, 'INFORMATION_MENU_SERVER'));
++	$paramRef->{internetaccess} = _extractGroup($paramRef, cstring($client, 'INFORMATION_MENU_INTERNET_ACCESS'));
+ 	$paramRef->{perl}    = _extractGroup($paramRef, cstring($client, 'INFORMATION_MENU_PERL'));
+ 	$paramRef->{library} = _extractGroup($paramRef, cstring($client, 'INFORMATION_MENU_LIBRARY'));
+ 	$paramRef->{players} = _extractGroup($paramRef, cstring($client, 'INFORMATION_MENU_PLAYER'));

@@ -1,0 +1,390 @@
+================================================================================
+PATCH: Slim/Networking/Async/HTTP.pm
+================================================================================
+Description:
+  Extends HTTP.pm with two new functions to check SSL certificate
+  availability and internet connectivity.
+
+Functions:
+  1. getSSLCertStatus()
+     - Checks if Mozilla::CA is installed
+     - If not: Tests if system certificates (/etc/ssl/certs) work
+     - Performs real HTTPS test to www.lyrion.org
+     - Supports proxy via HTTP CONNECT tunnel (no local DNS required)
+     - Caches result permanently (once at LMS startup)
+     - Returns: 'mozilla_ca', 'system_certs_ok' or 'ssl_not_available'
+
+  2. getInternetAccessStatus()
+     - Tests HTTP access to www.lyrion.org
+     - Tests HTTPS access to www.lyrion.org
+     - Supports proxy server (from webproxy preference)
+     - Caches result with 6-hour TTL (Time To Live)
+     - Automatically re-checks after cache expiration
+     - Returns: { http => 'ok'/'failed', https => 'ok'/'failed',
+		  proxy => 'host:port', lastCheckTime => unix_timestamp,
+		  nextCheckNotBefore => unix_timestamp }
+
+Cache Behavior:
+  - SSL status: Permanent cache (until LMS restart)
+  - Internet access: 6-hour cache, auto-refresh after expiration
+  - Debug log shows cache status and expiration times
+  - Cache survives multiple page refreshes without unnecessary network tests
+
+Technical Details:
+  - Uses IO::Socket::INET for TCP connections
+  - Uses IO::Socket::SSL for SSL handshakes
+  - HTTP CONNECT tunnel for HTTPS over proxy
+  - No DNS lookup required (proxy resolves)
+  - Comprehensive debug logging (network.asynchttp)
+  - Time-based cache expiration using Unix timestamps
+
+Requirements:
+  - No additional Perl modules (IO::Socket::SSL already present)
+  - Works with and without proxy server
+  - Works with and without direct DNS access
+
+Author: Markus Baier
+Date: 2025-12-28
+================================================================================
+
+
+--- a/Slim/Networking/Async/HTTP.pm	2025-12-28 15:14:28.937944076 +0100
++++ b/Slim/Networking/Async/HTTP.pm	2025-12-28 15:26:53.328585819 +0100
+@@ -70,6 +70,337 @@
+ 
+ my $log = logger('network.asynchttp');
+ 
++# SSL Certificate Status Cache
++my $sslCertStatus;
++
++# Check SSL certificate availability and functionality
++# Returns: 'mozilla_ca', 'system_certs_ok', or 'ssl_not_available'
++sub getSSLCertStatus {
++	if (defined $sslCertStatus) {
++		main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Returning cached status: $sslCertStatus");
++		return $sslCertStatus;
++	}
++	
++	main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Starting certificate availability check");
++	
++	# Check if Mozilla::CA is installed
++	eval {
++		require Mozilla::CA;
++		$sslCertStatus = 'mozilla_ca';
++		main::INFOLOG && $log->info("SSL: Mozilla::CA is installed (version " . ($Mozilla::CA::VERSION || 'unknown') . ")");
++		main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Using Mozilla::CA for certificate verification");
++		return $sslCertStatus;
++	};
++	
++	if ($@) {
++		main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Mozilla::CA not found, checking system certificates");
++	}
++	
++	main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Mozilla::CA not available, testing system certificates");
++	
++	# Check if system certificates exist
++	my $cert_dir = '/etc/ssl/certs';
++	if (-d $cert_dir) {
++		main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Found certificate directory: $cert_dir");
++		
++		# Count certificate files
++		opendir(my $dh, $cert_dir) or do {
++			$sslCertStatus = 'ssl_not_available';
++			$log->warn("SSL: Cannot open certificate directory: $!");
++			return $sslCertStatus;
++		};
++		
++		my @certs = grep { /\.(pem|crt)$/ && -f "$cert_dir/$_" } readdir($dh);
++		closedir($dh);
++		
++		main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Found " . scalar(@certs) . " certificate files in $cert_dir");
++	}
++	
++	# Try a real HTTPS connection to test if system certs work
++	main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Starting HTTPS connection test to www.lyrion.org");
++	
++	eval {
++		# Get proxy configuration
++		my $proxy = $prefs->get('webproxy');
++		
++		if ($proxy) {
++			# Test SSL via proxy using CONNECT tunnel
++			main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Testing SSL via proxy using CONNECT tunnel");
++			
++			# Parse proxy address
++			my ($proxy_host, $proxy_port) = split(/:/, $proxy);
++			$proxy_port ||= 8080;
++			
++			main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Proxy host: $proxy_host, port: $proxy_port");
++			
++			# Connect to proxy
++			require IO::Socket::INET;
++			my $sock = IO::Socket::INET->new(
++				PeerAddr => $proxy_host,
++				PeerPort => $proxy_port,
++				Proto    => 'tcp',
++				Timeout  => 5,
++			) or die "Cannot connect to proxy: $!";
++			
++			main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Connected to proxy, sending CONNECT request");
++			
++			# Send CONNECT request
++			print $sock "CONNECT www.lyrion.org:443 HTTP/1.0\r\n";
++			print $sock "\r\n";
++			
++			# Read proxy response
++			my $response = <$sock>;
++			main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Proxy response: $response");
++			
++			if ($response !~ /^HTTP\/\d\.\d 2\d\d/) {
++				die "Proxy CONNECT failed: $response";
++			}
++			
++			# Read remaining headers
++			while (<$sock>) {
++				last if /^\r?\n$/;
++			}
++			
++			main::DEBUGLOG && $log->is_debug && $log->debug("SSL: CONNECT tunnel established, upgrading to SSL");
++			
++			# Upgrade to SSL
++			require IO::Socket::SSL;
++			IO::Socket::SSL->start_SSL($sock,
++				SSL_hostname => 'www.lyrion.org',
++				SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
++			) or die "SSL upgrade failed: " . IO::Socket::SSL::errstr();
++			
++			main::DEBUGLOG && $log->is_debug && $log->debug("SSL: SSL handshake successful");
++			
++			# Check certificate
++			my $cert = $sock->peer_certificate();
++			if ($cert) {
++				$sslCertStatus = 'system_certs_ok';
++				main::INFOLOG && $log->info("SSL: System certificates work correctly (tested with www.lyrion.org via proxy)");
++				main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Certificate verification successful");
++			}
++			else {
++				$sslCertStatus = 'ssl_not_available';
++				$log->warn("SSL: No certificate received");
++			}
++			
++			close($sock);
++		}
++		else {
++			# No proxy - direct connection test
++			main::DEBUGLOG && $log->is_debug && $log->debug("SSL: No proxy configured, testing direct HTTPS connection");
++			
++			require IO::Socket::SSL;
++			my $sock = IO::Socket::SSL->new(
++				PeerAddr => 'www.lyrion.org:443',
++				SSL_hostname => 'www.lyrion.org',
++				SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
++				Timeout => 5,
++			) or die "SSL connection failed: " . IO::Socket::SSL::errstr();
++			
++			main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Direct SSL connection successful");
++			
++			my $cert = $sock->peer_certificate();
++			if ($cert) {
++				$sslCertStatus = 'system_certs_ok';
++				main::INFOLOG && $log->info("SSL: System certificates work correctly (tested with www.lyrion.org)");
++				main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Certificate verification successful");
++			}
++			else {
++				$sslCertStatus = 'ssl_not_available';
++				$log->warn("SSL: No certificate received");
++			}
++			
++			close($sock);
++		}
++	};
++	
++	if ($@) {
++		$sslCertStatus = 'ssl_not_available';
++		$log->warn("SSL: HTTPS connection test failed: $@");
++		main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Exception during HTTPS test");
++	}
++	
++	main::DEBUGLOG && $log->is_debug && $log->debug("SSL: Final status: $sslCertStatus");
++	
++	return $sslCertStatus;
++}
++
++# Internet Access Status Cache
++my $internetAccessStatus;
++
++# Test HTTP and HTTPS access to www.lyrion.org
++# Returns: { http => 'ok'/'failed', https => 'ok'/'failed', proxy => 'host:port' or undef,
++#            lastCheckTime => unix_timestamp, nextCheckNotBefore => unix_timestamp }
++sub getInternetAccessStatus {
++	my $currentTime = time();
++	
++	# Check if cache exists and is still valid
++	if (defined $internetAccessStatus && $internetAccessStatus->{nextCheckNotBefore} > $currentTime) {
++		my $expiresIn = $internetAccessStatus->{nextCheckNotBefore} - $currentTime;
++		main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: Returning cached status (expires in $expiresIn seconds)");
++		return $internetAccessStatus;
++	}
++	
++	if (defined $internetAccessStatus) {
++		main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: Cache expired, re-checking connectivity");
++	} else {
++		main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: Starting connectivity check");
++	}
++	
++	$internetAccessStatus = {
++		http => 'failed',
++		https => 'failed',
++		proxy => undef,
++		lastCheckTime => $currentTime,
++		nextCheckNotBefore => $currentTime + (6 * 3600), # 6 hours = 21600 seconds
++	};
++	
++	# Get proxy configuration
++	my $proxy = $prefs->get('webproxy');
++	if ($proxy) {
++		my ($proxy_host, $proxy_port) = split(/:/, $proxy);
++		$proxy_port ||= 8080;
++		$internetAccessStatus->{proxy} = "$proxy_host:$proxy_port";
++		main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: Using proxy $proxy_host:$proxy_port");
++	}
++	
++	# Test HTTP access
++	eval {
++		main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: Testing HTTP access to www.lyrion.org");
++		
++		if ($proxy) {
++			# HTTP via proxy
++			my ($proxy_host, $proxy_port) = split(/:/, $proxy);
++			$proxy_port ||= 8080;
++			
++			require IO::Socket::INET;
++			my $sock = IO::Socket::INET->new(
++				PeerAddr => $proxy_host,
++				PeerPort => $proxy_port,
++				Proto    => 'tcp',
++				Timeout  => 5,
++			) or die "Cannot connect to proxy: $!";
++			
++			# Send HTTP request via proxy
++			print $sock "GET http://www.lyrion.org/ HTTP/1.0\r\n";
++			print $sock "Host: www.lyrion.org\r\n";
++			print $sock "\r\n";
++			
++			# Read response
++			my $response = <$sock>;
++			main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: HTTP response: $response");
++			
++			if ($response && $response =~ /^HTTP\/\d\.\d (2\d\d|3\d\d)/) {
++				$internetAccessStatus->{http} = 'ok';
++				main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: HTTP test successful");
++			}
++			
++			close($sock);
++		}
++		else {
++			# Direct HTTP connection
++			require IO::Socket::INET;
++			my $sock = IO::Socket::INET->new(
++				PeerAddr => 'www.lyrion.org:80',
++				Proto    => 'tcp',
++				Timeout  => 5,
++			) or die "Cannot connect: $!";
++			
++			print $sock "GET / HTTP/1.0\r\n";
++			print $sock "Host: www.lyrion.org\r\n";
++			print $sock "\r\n";
++			
++			my $response = <$sock>;
++			main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: HTTP response: $response");
++			
++			if ($response && $response =~ /^HTTP\/\d\.\d (2\d\d|3\d\d)/) {
++				$internetAccessStatus->{http} = 'ok';
++				main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: HTTP test successful");
++			}
++			
++			close($sock);
++		}
++	};
++	
++	if ($@) {
++		main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: HTTP test failed: $@");
++	}
++	
++	# Test HTTPS access (reuse SSL test logic)
++	eval {
++		main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: Testing HTTPS access to www.lyrion.org");
++		
++		if ($proxy) {
++			# HTTPS via proxy using CONNECT tunnel
++			my ($proxy_host, $proxy_port) = split(/:/, $proxy);
++			$proxy_port ||= 8080;
++			
++			require IO::Socket::INET;
++			my $sock = IO::Socket::INET->new(
++				PeerAddr => $proxy_host,
++				PeerPort => $proxy_port,
++				Proto    => 'tcp',
++				Timeout  => 5,
++			) or die "Cannot connect to proxy: $!";
++			
++			# Send CONNECT request
++			print $sock "CONNECT www.lyrion.org:443 HTTP/1.0\r\n";
++			print $sock "\r\n";
++			
++			# Read proxy response
++			my $response = <$sock>;
++			
++			if ($response !~ /^HTTP\/\d\.\d 2\d\d/) {
++				die "Proxy CONNECT failed: $response";
++			}
++			
++			# Read remaining headers
++			while (<$sock>) {
++				last if /^\r?\n$/;
++			}
++			
++			# Upgrade to SSL
++			require IO::Socket::SSL;
++			IO::Socket::SSL->start_SSL($sock,
++				SSL_hostname => 'www.lyrion.org',
++				SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
++			) or die "SSL upgrade failed: " . IO::Socket::SSL::errstr();
++			
++			$internetAccessStatus->{https} = 'ok';
++			main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: HTTPS test successful");
++			
++			close($sock);
++		}
++		else {
++			# Direct HTTPS connection
++			require IO::Socket::SSL;
++			my $sock = IO::Socket::SSL->new(
++				PeerAddr => 'www.lyrion.org:443',
++				SSL_hostname => 'www.lyrion.org',
++				SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
++				Timeout => 5,
++			) or die "SSL connection failed: " . IO::Socket::SSL::errstr();
++			
++			$internetAccessStatus->{https} = 'ok';
++			main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: HTTPS test successful");
++			
++			close($sock);
++		}
++	};
++	
++	if ($@) {
++		main::DEBUGLOG && $log->is_debug && $log->debug("Internet Access: HTTPS test failed: $@");
++	}
++	
++	main::DEBUGLOG && $log->is_debug && $log->debug(sprintf("Internet Access: Check completed - HTTP: %s, HTTPS: %s (next check after %s)",
++		$internetAccessStatus->{http}, 
++		$internetAccessStatus->{https},
++		scalar localtime($internetAccessStatus->{nextCheckNotBefore})));
++	
++	return $internetAccessStatus;
++}
++
+ __PACKAGE__->mk_accessor( rw => qw(
+ 	uri request response saveAs fh timeout maxRedirect socks options insecureHTTPS
+ ) );

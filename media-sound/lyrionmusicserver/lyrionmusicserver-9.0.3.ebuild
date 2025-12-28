@@ -130,6 +130,11 @@ PATCHES=(
 	"${FILESDIR}/LMS-9.0.3_improved_softlink_target_check.patch"
 	"${FILESDIR}/LMS-9.0.3_move_client_playlist_path.patch"
 	"${FILESDIR}/LMS-9.0.3_enable_Proxy_Support_for_HTTPS_Connections.patch"
+	"${FILESDIR}/LMS-9.0.3_optimized_SSL_and_Internet_access_Info_part_1.patch"
+	"${FILESDIR}/LMS-9.0.3_optimized_SSL_and_Internet_access_Info_part_2.patch"
+	"${FILESDIR}/LMS-9.0.3_optimized_SSL_and_Internet_access_Info_part_3.patch"
+	"${FILESDIR}/LMS-9.0.3_optimized_SSL_and_Internet_access_Info_part_4.patch"
+	"${FILESDIR}/LMS-9.0.3_optimized_SSL_and_Internet_access_Info_part_5.patch"
 )
 
 

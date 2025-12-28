@@ -1,0 +1,214 @@
+================================================================================
+PATCH: strings.txt
+================================================================================
+Description: Adds strings for the SSL_CERT_WARNING; INFORMATION_MENU_INTERNET_ACCESS
+             INTERNET_ACCESS_HTTP; INTERNET_ACCESS_HTTPS; INTERNET_ACCESS_VIA_PROXY
+             INTERNET_ACCESS_OK; INTERNET_ACCESS_FAILED; INTERNET_ACCESS_ERROR
+	     INTERNET_ACCESS_LAST_CHECK; INTERNET_ACCESS_NEXT_CHECK
+	     Tests
+
+Author: Markus Baier
+Date: 2025-12-28
+Notes: Series with 5 patches
+================================================================================
+
+
+--- a/strings.txt	2025-12-27 18:48:27.550563518 +0100
++++ b/strings.txt	2025-12-28 15:56:21.916351659 +0100
+@@ -18614,6 +18614,196 @@
+ 	FR	Versions de Perl et des modules
+ 	PT	Versões de Perl e Módulos
+ 
++SSL_CERT_WARNING
++	CS	VAROVÃNÃ: SSL nenÃ­ k dispozici - nainstalujte Mozilla::CA
++	DA	ADVARSEL: SSL ikke tilgÃ¦ngelig - installer Mozilla::CA
++	DE	WARNUNG: SSL nicht verfuegbar - Mozilla::CA muss installiert werden
++	EN	WARNING: SSL not available - Mozilla::CA must be installed
++	ES	ADVERTENCIA: SSL no disponible - debe instalarse Mozilla::CA
++	FI	VAROITUS: SSL ei saatavilla - asenna Mozilla::CA
++	FR	AVERTISSEMENT: SSL non disponible - Mozilla::CA doit Ãªtre installÃ©
++	HE	××××¨×: SSL ×× ×××× - ××© ×××ª×§×× Mozilla::CA
++	HU	FIGYELMEZTETÃS: SSL nem elÃ©rhetÅ - telepÃ­tse a Mozilla::CA-t
++	IT	ATTENZIONE: SSL non disponibile - Mozilla::CA deve essere installato
++	NL	WAARSCHUWING: SSL niet beschikbaar - Mozilla::CA moet worden geÃ¯nstalleerd
++	NO	ADVARSEL: SSL ikke tilgjengelig - Mozilla::CA mÃ¥ installeres
++	PL	OSTRZEÅ»ENIE: SSL niedostÄpny - naleÅ¼y zainstalowaÄ Mozilla::CA
++	PT	AVISO: SSL nÃ£o disponÃ­vel - Mozilla::CA deve ser instalado
++	RU	ÐÐ ÐÐÐ£ÐÐ ÐÐÐÐÐÐÐ: SSL Ð½ÐµÐ´Ð¾ÑÑÑÐ¿ÐµÐ½ - Ð½ÐµÐ¾Ð±ÑÐ¾Ð´Ð¸Ð¼Ð¾ ÑÑÑÐ°Ð½Ð¾Ð²Ð¸ÑÑ Mozilla::CA
++	SV	VARNING: SSL inte tillgÃ¤ngligt - Mozilla::CA mÃ¥ste installeras
++	ZH_CN	è­¦åï¼SSLä¸å¯ç¨ - å¿é¡»å®è£Mozilla::CA
++
++INFORMATION_MENU_INTERNET_ACCESS
++	CS	PÅÃ­stup k internetovÃ½m zdrojÅ¯m
++	DA	Adgang til internetressourcer
++	DE	Zugriff auf Internetresourcen
++	EN	Internet Access
++	ES	Acceso a recursos de Internet
++	FI	Internetresurssien kÃ¤yttÃ¶
++	FR	AccÃ¨s aux ressources Internet
++	HE	×××©× ×××©××× ××× ××¨× ×
++	HU	HozzÃ¡fÃ©rÃ©s internetes forrÃ¡sokhoz
++	IT	Accesso a risorse Internet
++	NL	Toegang tot internetbronnen
++	NO	Tilgang til internettressurser
++	PL	DostÄp do zasobÃ³w internetowych
++	PT	Acesso a recursos da Internet
++	RU	ÐÐ¾ÑÑÑÐ¿ Ðº Ð¸Ð½ÑÐµÑÐ½ÐµÑ-ÑÐµÑÑÑÑÐ°Ð¼
++	SV	Ãtkomst till internetresurser
++	ZH_CN	äºèç½èµæºè®¿é®
++
++INTERNET_ACCESS_HTTP
++	CS	PÅÃ­stup pÅes HTTP na www.lyrion.org
++	DA	HTTP-adgang til www.lyrion.org
++	DE	Zugriff ueber HTTP auf www.lyrion.org
++	EN	HTTP access to www.lyrion.org
++	ES	Acceso HTTP a www.lyrion.org
++	FI	HTTP-yhteys osoitteeseen www.lyrion.org
++	FR	AccÃ¨s HTTP Ã  www.lyrion.org
++	HE	×××©×ª HTTP ×× www.lyrion.org
++	HU	HTTP hozzÃ¡fÃ©rÃ©s a www.lyrion.org cÃ­mhez
++	IT	Accesso HTTP a www.lyrion.org
++	NL	HTTP-toegang tot www.lyrion.org
++	NO	HTTP-tilgang til www.lyrion.org
++	PL	DostÄp HTTP do www.lyrion.org
++	PT	Acesso HTTP a www.lyrion.org
++	RU	HTTP Ð´Ð¾ÑÑÑÐ¿ Ðº www.lyrion.org
++	SV	HTTP-Ã¥tkomst till www.lyrion.org
++	ZH_CN	HTTPè®¿é®www.lyrion.org
++
++INTERNET_ACCESS_HTTPS
++	CS	PÅÃ­stup pÅes HTTPS na www.lyrion.org
++	DA	HTTPS-adgang til www.lyrion.org
++	DE	Zugriff ueber HTTPS auf www.lyrion.org
++	EN	HTTPS access to www.lyrion.org
++	ES	Acceso HTTPS a www.lyrion.org
++	FI	HTTPS-yhteys osoitteeseen www.lyrion.org
++	FR	AccÃ¨s HTTPS Ã  www.lyrion.org
++	HE	×××©×ª HTTPS ×× www.lyrion.org
++	HU	HTTPS hozzÃ¡fÃ©rÃ©s a www.lyrion.org cÃ­mhez
++	IT	Accesso HTTPS a www.lyrion.org
++	NL	HTTPS-toegang tot www.lyrion.org
++	NO	HTTPS-tilgang til www.lyrion.org
++	PL	DostÄp HTTPS do www.lyrion.org
++	PT	Acesso HTTPS a www.lyrion.org
++	RU	HTTPS Ð´Ð¾ÑÑÑÐ¿ Ðº www.lyrion.org
++	SV	HTTPS-Ã¥tkomst till www.lyrion.org
++	ZH_CN	HTTPSè®¿é®www.lyrion.org
++
++INTERNET_ACCESS_VIA_PROXY
++	CS	via proxy
++	DA	via proxy
++	DE	via Proxy
++	EN	via proxy
++	ES	vÃ­a proxy
++	FI	proxyn kautta
++	FR	via proxy
++	HE	××¨× ×¤×¨××§×¡×
++	HU	proxy-n keresztÃ¼l
++	IT	tramite proxy
++	NL	via proxy
++	NO	via proxy
++	PL	przez proxy
++	PT	via proxy
++	RU	ÑÐµÑÐµÐ· Ð¿ÑÐ¾ÐºÑÐ¸
++	SV	via proxy
++	ZH_CN	éè¿ä»£ç
++
++INTERNET_ACCESS_OK
++	CS	OK
++	DA	OK
++	DE	OK
++	EN	OK
++	ES	OK
++	FI	OK
++	FR	OK
++	HE	×ª×§××
++	HU	OK
++	IT	OK
++	NL	OK
++	NO	OK
++	PL	OK
++	PT	OK
++	RU	OK
++	SV	OK
++	ZH_CN	æ­£å¸¸
++
++INTERNET_ACCESS_FAILED
++	CS	URL nenÃ­ dostupnÃ¡
++	DA	URL ikke tilgÃ¦ngelig
++	DE	URL nicht erreichbar
++	EN	URL not reachable
++	ES	URL no accesible
++	FI	URL ei tavoitettavissa
++	FR	URL non accessible
++	HE	URL ×× × ×××©
++	HU	URL nem elÃ©rhetÅ
++	IT	URL non raggiungibile
++	NL	URL niet bereikbaar
++	NO	URL ikke tilgjengelig
++	PL	URL niedostÄpny
++	PT	URL nÃ£o acessÃ­vel
++	RU	URL Ð½ÐµÐ´Ð¾ÑÑÑÐ¿ÐµÐ½
++	SV	URL inte nÃ¥bar
++	ZH_CN	URLæ æ³è®¿é®
++
++INTERNET_ACCESS_ERROR
++	CS	Chyba pÅi zÃ­skÃ¡vÃ¡nÃ­ stavu
++	DA	Fejl ved hentning af status
++	DE	Fehler beim Abrufen des Status
++	EN	Error retrieving status
++	ES	Error al obtener el estado
++	FI	Virhe tilan hakemisessa
++	FR	Erreur lors de la rÃ©cupÃ©ration du statut
++	HE	×©×××× ××§×××ª ×¡××××¡
++	HU	Hiba az Ã¡llapot lekÃ©rÃ©sekor
++	IT	Errore nel recupero dello stato
++	NL	Fout bij ophalen van status
++	NO	Feil ved henting av status
++	PL	BÅÄd pobierania statusu
++	PT	Erro ao obter status
++	RU	ÐÑÐ¸Ð±ÐºÐ° Ð¿Ð¾Ð»ÑÑÐµÐ½Ð¸Ñ ÑÑÐ°ÑÑÑÐ°
++	SV	Fel vid hÃ¤mtning av status
++	ZH_CN	è·åç¶ææ¶åºé
++
++INTERNET_ACCESS_LAST_CHECK
++	CS	PoslednÃ­ test pÅipojenÃ­ proveden
++	DA	Sidste forbindelsestest udfÃ¸rt
++	DE	Letzter Verbindungstest durchgefuehrt am
++	EN	Last connectivity test performed
++	ES	Ãltima prueba de conexiÃ³n realizada
++	FI	Viimeisin yhteystesti suoritettu
++	FR	Dernier test de connexion effectuÃ©
++	HE	××××§×ª ×§××©××¨×××ª ×××¨×× × ×××¦×¢×
++	HU	UtolsÃ³ kapcsolati teszt vÃ©grehajtva
++	IT	Ultimo test di connettivitÃ  eseguito
++	NL	Laatste connectiviteitstest uitgevoerd
++	NO	Siste tilkoblingstest utfÃ¸rt
++	PL	Ostatni test ÅÄcznoÅci wykonano
++	PT	Ãltimo teste de conectividade realizado
++	RU	ÐÐ¾ÑÐ»ÐµÐ´Ð½Ð¸Ð¹ ÑÐµÑÑ Ð¿Ð¾Ð´ÐºÐ»ÑÑÐµÐ½Ð¸Ñ Ð²ÑÐ¿Ð¾Ð»Ð½ÐµÐ½
++	SV	Senaste anslutningstestet utfÃ¶rt
++	ZH_CN	ä¸æ¬¡è¿æ¥æµè¯æ§è¡æ¶é´
++
++INTERNET_ACCESS_NEXT_CHECK
++	CS	DalÅ¡Ã­ test pÅipojenÃ­ nejdÅÃ­ve
++	DA	NÃ¦ste forbindelsestest tidligst
++	DE	Naechster Verbindungstest nicht vor
++	EN	Next connectivity test not before
++	ES	PrÃ³xima prueba de conexiÃ³n no antes de
++	FI	Seuraava yhteystesti ei ennen
++	FR	Prochain test de connexion pas avant
++	HE	××××§×ª ×§××©××¨×××ª ×××× ×× ××¤× ×
++	HU	KÃ¶vetkezÅ kapcsolati teszt legkorÃ¡bban
++	IT	Prossimo test di connettivitÃ  non prima di
++	NL	Volgende connectiviteitstest niet voor
++	NO	Neste tilkoblingstest tidligst
++	PL	NastÄpny test ÅÄcznoÅci nie wczeÅniej niÅ¼
++	PT	PrÃ³ximo teste de conectividade nÃ£o antes de
++	RU	Ð¡Ð»ÐµÐ´ÑÑÑÐ¸Ð¹ ÑÐµÑÑ Ð¿Ð¾Ð´ÐºÐ»ÑÑÐµÐ½Ð¸Ñ Ð½Ðµ ÑÐ°Ð½ÐµÐµ
++	SV	NÃ¤sta anslutningstest tidigast
++	ZH_CN	ä¸æ¬¡è¿æ¥æµè¯ä¸æ©äº
++
+ INFORMATION_MENU_SCAN
+ 	CS	Detaily prohledávání médií
+ 	DA	Detaljer om mediesøgning

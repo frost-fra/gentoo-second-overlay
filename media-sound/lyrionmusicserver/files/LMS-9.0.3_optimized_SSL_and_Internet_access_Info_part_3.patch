@@ -1,0 +1,202 @@
+================================================================================
+PATCH: Slim/Menu/SystemInfo.pm
+================================================================================
+Description:
+  Extends SystemInfo.pm to display SSL certificate status and internet
+  access information on the server status page.
+
+Changes:
+  1. registerDefaultInfoProviders()
+     - Registers new 'internetaccess' info provider
+     - Position: after 'server', before 'perl'
+     - Ensures consistent ordering across CLI/Apps/Web interfaces
+
+  2. infoPerl() - Modified
+     - Calls getSSLCertStatus() to check SSL certificate availability
+     - Shows Mozilla::CA version if installed
+     - Shows warning (SSL_CERT_WARNING) if SSL not available
+     - Hides Mozilla::CA line if system certificates work ('system_certs_ok')
+     - Smart SSL status display without false warnings
+
+  3. infoInternetAccess() - New Function
+     - Calls getInternetAccessStatus() to test connectivity
+     - Displays HTTP access status (OK/failed)
+     - Displays HTTPS access status (OK/failed)
+     - Shows proxy server info if configured
+     - Non-breaking space separator before timestamp info (for visual spacing)
+     - Shows last check time (localized date + time)
+     - Shows next check time (always next full minute, localized date + time)
+     - Shows error message if status retrieval fails
+     - All strings via cstring() for multilingual support (17 languages)
+
+Technical Details:
+  - Uses cstring() for all displayed text (required for template rendering)
+  - Uses Slim::Utils::DateTime::longDateF() for localized date formatting
+  - Uses POSIX::strftime('%H:%M') for time formatting
+  - Combines date and time with " / " separator
+    German example: "Sonntag, 28. Dezember 2025 / 15:30"
+    English example: "Sunday, December 28, 2025 / 3:30 PM"
+  - Always rounds next check time up to next full minute
+    Formula: (int(timestamp / 60) + 1) * 60
+  - Uses Unicode non-breaking space (U+00A0) for visual separator line
+  - Proper error handling with eval blocks
+  - Results cached in HTTP.pm (no repeated tests)
+  - Compatible with CLI, Apps, and Web interfaces
+
+Requirements:
+  - HTTP.pm patch must be applied first
+  - strings.txt must contain new string definitions
+  - Status.pm patch required for web display
+
+Author: Markus Baier
+Date: 2025-12-28
+================================================================================
+
+
+--- a/Slim/Menu/SystemInfo.pm	2025-12-28 18:46:54.805799912 +0100
++++ b/Slim/Menu/SystemInfo.pm	2025-12-28 18:52:04.601905248 +0100
+@@ -62,8 +62,13 @@
+ 		func  => \&infoServer,
+ 	) );
+ 
+-	$class->registerInfoProvider( perl => (
++	$class->registerInfoProvider( internetaccess => (
+ 		after => 'server',
++		func  => \&infoInternetAccess,
++	) );
++
++	$class->registerInfoProvider( perl => (
++		after => 'internetaccess',
+ 		func  => \&infoPerl,
+ 	) );
+ 
+@@ -369,12 +374,26 @@
+ 		push @{$items}, {
+ 			type => 'text',
+ 			name => 'IO::Socket::SSL' . cstring($client, 'COLON') . ' ' . $IO::Socket::SSL::VERSION,
+-		},
+-
+-		{
+-			type => 'text',
+-			name => 'Mozilla::CA' . cstring($client, 'COLON') . ' ' . ($Mozilla::CA::VERSION || cstring($client, 'UNK')),
+ 		};
++		
++		# Check SSL certificate status (cached after first call)
++		my $sslStatus = Slim::Networking::Async::HTTP->getSSLCertStatus();
++		
++		if ($sslStatus eq 'mozilla_ca') {
++			# Mozilla::CA is installed, show version
++			push @{$items}, {
++				type => 'text',
++				name => 'Mozilla::CA' . cstring($client, 'COLON') . ' ' . ($Mozilla::CA::VERSION || cstring($client, 'UNK')),
++			};
++		}
++		elsif ($sslStatus eq 'ssl_not_available') {
++			# SSL not working, show warning
++			push @{$items}, {
++				type => 'text',
++				name => cstring($client, 'SSL_CERT_WARNING'),
++			};
++		}
++		# If sslStatus is 'system_certs_ok', we don't add any Mozilla::CA line
+ 
+ 		# add an extra eval, as on systems missing that library we could fail the whole menu
+ 		eval {
+@@ -403,6 +422,97 @@
+ 		items => $items,
+ 	};
+ }
++
++sub infoInternetAccess {
++	my $client = shift;
++	my $tags   = shift;
++	
++	my $items = [];
++	
++	# Get internet access status (cached after first call)
++	my $status;
++	eval {
++		$status = Slim::Networking::Async::HTTP->getInternetAccessStatus();
++	};
++	
++	if ($@ || !$status) {
++		push @{$items}, {
++			type => 'text',
++			name => cstring($client, 'INTERNET_ACCESS_ERROR'),
++		};
++		return {
++			name  => cstring($client, 'INFORMATION_MENU_INTERNET_ACCESS'),
++			items => $items,
++		};
++	}
++	
++	# Build HTTP status line
++	my $http_line = cstring($client, 'INTERNET_ACCESS_HTTP');
++	if ($status->{proxy}) {
++		$http_line .= ' ' . cstring($client, 'INTERNET_ACCESS_VIA_PROXY') . ' ' . $status->{proxy};
++	}
++	$http_line .= cstring($client, 'COLON') . ' ';
++	$http_line .= ($status->{http} eq 'ok') 
++		? cstring($client, 'INTERNET_ACCESS_OK') 
++		: cstring($client, 'INTERNET_ACCESS_FAILED');
++	
++	push @{$items}, {
++		type => 'text',
++		name => $http_line,
++	};
++	
++	# Build HTTPS status line
++	my $https_line = cstring($client, 'INTERNET_ACCESS_HTTPS');
++	if ($status->{proxy}) {
++		$https_line .= ' ' . cstring($client, 'INTERNET_ACCESS_VIA_PROXY') . ' ' . $status->{proxy};
++	}
++	$https_line .= cstring($client, 'COLON') . ' ';
++	$https_line .= ($status->{https} eq 'ok') 
++		? cstring($client, 'INTERNET_ACCESS_OK') 
++		: cstring($client, 'INTERNET_ACCESS_FAILED');
++	
++	push @{$items}, {
++		type => 'text',
++		name => $https_line,
++	};
++	
++	# Add empty line separator
++	push @{$items}, {
++		type => 'text',
++		name => "\x{00A0}",  # Non-breaking space (Unicode)
++	};
++	
++	# Format and display last check time
++	if ($status->{lastCheckTime}) {
++		require POSIX;
++		my $date_str = Slim::Utils::DateTime::longDateF($status->{lastCheckTime});
++		my $time_str = POSIX::strftime('%H:%M', localtime($status->{lastCheckTime}));
++		my $last_check_str = $date_str . ' / ' . $time_str;
++		push @{$items}, {
++			type => 'text',
++			name => cstring($client, 'INTERNET_ACCESS_LAST_CHECK') . cstring($client, 'COLON') . ' ' . $last_check_str,
++		};
++	}
++	
++	# Format and display next check time (always next full minute)
++	if ($status->{nextCheckNotBefore}) {
++		require POSIX;
++		# Always round up to next full minute
++		my $next_check_rounded = (int($status->{nextCheckNotBefore} / 60) + 1) * 60;
++		my $date_str = Slim::Utils::DateTime::longDateF($next_check_rounded);
++		my $time_str = POSIX::strftime('%H:%M', localtime($next_check_rounded));
++		my $next_check_str = $date_str . ' / ' . $time_str;
++		push @{$items}, {
++			type => 'text',
++			name => cstring($client, 'INTERNET_ACCESS_NEXT_CHECK') . cstring($client, 'COLON') . ' ' . $next_check_str,
++		};
++	}
++	
++	return {
++		name  => cstring($client, 'INFORMATION_MENU_INTERNET_ACCESS'),
++		items => $items,
++	};
++}
+ 
+ sub infoDirs {
+ 	my $client = shift;
